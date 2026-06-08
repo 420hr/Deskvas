@@ -523,7 +523,7 @@ h1 {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 5;
+  z-index: 2;
   border-radius: 50%;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 42%);
   pointer-events: none;
@@ -532,7 +532,7 @@ h1 {
 .gauge-ticks {
   position: absolute;
   inset: 4%;
-  z-index: 1;
+  z-index: 3;
   border-radius: 50%;
   background:
     repeating-conic-gradient(from 218deg, #fff4d4 0 1.6deg, transparent 1.6deg 8deg);
@@ -544,22 +544,22 @@ h1 {
 
 .gauge-needle {
   position: absolute;
-  z-index: 4;
+  z-index: 7;
   left: 50%;
-  top: 50%;
-  width: 0.26rem;
-  height: 39%;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #fff8da, #d74d45 35%, #9b292e);
-  box-shadow: 0 0 0.6rem rgba(215, 77, 69, 0.72);
+  bottom: 50%;
+  width: 0.3rem;
+  height: 42%;
+  border-radius: 999px 999px 0.08rem 0.08rem;
+  background: linear-gradient(180deg, #fff8da 0 8%, #f05d54 9% 54%, #8f202b 55% 100%);
+  box-shadow: 0 0 0.65rem rgba(215, 77, 69, 0.78), 0 0.18rem 0.25rem rgba(0, 0, 0, 0.4);
   transform: translateX(-50%) rotate(var(--needle));
-  transform-origin: 50% 0;
+  transform-origin: 50% 100%;
   transition: transform 260ms ease;
 }
 
 .gauge-label {
   position: absolute;
-  z-index: 3;
+  z-index: 4;
   color: rgba(255, 248, 226, 0.82);
   font-size: 0.56rem;
   font-weight: 900;
@@ -585,7 +585,7 @@ h1 {
 
 .gauge-hub {
   position: absolute;
-  z-index: 5;
+  z-index: 8;
   left: 50%;
   top: 50%;
   width: 1.15rem;
