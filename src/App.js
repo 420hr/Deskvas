@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-10";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-11";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
@@ -459,10 +459,11 @@ function CourseFolder({ course, state, helpers }) {
   return h(
     "button",
     {
-      className: `folder ${state.selectedCourse === course.id ? "selected" : ""}`,
+      className: `folder subject-${course.id} ${state.selectedCourse === course.id ? "selected" : ""}`,
       style: { "--accent": course.color },
       onClick: () => helpers.openCourse(course.id),
     },
+    h("span", { className: "folder-art", "aria-hidden": "true" }),
     h("span", null, course.name),
     h("strong", null, `${Math.round(course.grade)}%`),
     h("i", { style: { height: `${completionRatio(course, helpers)}%` } })

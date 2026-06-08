@@ -637,7 +637,7 @@ h1 {
   display: block;
 }
 
-.folder span {
+.folder > span:not(.folder-art) {
   margin-top: 1.15rem;
   color: var(--muted);
 }
@@ -658,6 +658,155 @@ h1 {
 
 .folder.selected {
   outline: 0.18rem solid color-mix(in srgb, var(--accent) 60%, white);
+}
+
+.folder-art {
+  position: absolute !important;
+  inset: 0;
+  z-index: 0 !important;
+  display: block;
+  overflow: hidden;
+  border-radius: inherit;
+  opacity: 0.58;
+  pointer-events: none;
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.folder:hover .folder-art,
+.folder:focus-visible .folder-art {
+  opacity: 0.78;
+  transform: translateY(-0.2rem);
+}
+
+.folder-art::before,
+.folder-art::after {
+  content: "";
+  position: absolute;
+}
+
+.subject-bio .folder-art {
+  background:
+    radial-gradient(circle at 77% 34%, color-mix(in srgb, var(--accent) 72%, white) 0 0.38rem, transparent 0.42rem),
+    radial-gradient(circle at 64% 56%, color-mix(in srgb, var(--accent) 52%, white) 0 0.28rem, transparent 0.32rem),
+    linear-gradient(120deg, transparent 0 56%, rgba(255, 255, 255, 0.16) 57% 60%, transparent 61%);
+}
+
+.subject-bio .folder-art::before {
+  right: 1.1rem;
+  top: 1.2rem;
+  width: 5.8rem;
+  height: 5.8rem;
+  border: 0.14rem solid color-mix(in srgb, var(--accent) 68%, white);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent) 48%, transparent) 0 0.24rem, transparent 0.28rem),
+    repeating-linear-gradient(90deg, transparent 0 0.56rem, rgba(255, 255, 255, 0.2) 0.58rem 0.66rem);
+  transform: rotate(-18deg);
+}
+
+.subject-bio .folder-art::after {
+  right: 3.7rem;
+  top: 0.9rem;
+  width: 0.42rem;
+  height: 6.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 72%, white);
+  box-shadow: 1.5rem 0.25rem 0 color-mix(in srgb, var(--accent) 45%, white);
+  transform: rotate(34deg);
+}
+
+.subject-eng .folder-art {
+  background:
+    linear-gradient(115deg, transparent 0 48%, rgba(255, 255, 255, 0.2) 49% 51%, transparent 52%),
+    repeating-linear-gradient(0deg, transparent 0 1.05rem, rgba(255, 255, 255, 0.16) 1.08rem 1.14rem);
+}
+
+.subject-eng .folder-art::before {
+  right: 1.4rem;
+  top: 1.25rem;
+  width: 5.2rem;
+  height: 3.9rem;
+  border: 0.13rem solid color-mix(in srgb, var(--accent) 62%, white);
+  border-radius: 0.2rem 0.2rem 0.45rem 0.45rem;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 0.62rem, rgba(255, 255, 255, 0.2) 0.65rem 0.72rem),
+    color-mix(in srgb, var(--accent) 18%, transparent);
+  transform: rotate(7deg);
+}
+
+.subject-eng .folder-art::after {
+  right: 4.8rem;
+  top: 0.8rem;
+  width: 0.35rem;
+  height: 6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 75%, #fff8e8);
+  box-shadow: 0.7rem -0.35rem 0 -0.08rem rgba(255, 248, 232, 0.8);
+  transform: rotate(46deg);
+}
+
+.subject-calc .folder-art {
+  background:
+    linear-gradient(115deg, transparent 0 46%, color-mix(in srgb, var(--accent) 45%, transparent) 47% 48%, transparent 49%),
+    repeating-linear-gradient(90deg, transparent 0 0.95rem, rgba(255, 255, 255, 0.13) 0.98rem 1.05rem),
+    repeating-linear-gradient(0deg, transparent 0 0.95rem, rgba(255, 255, 255, 0.11) 0.98rem 1.05rem);
+}
+
+.subject-calc .folder-art::before {
+  right: 0.8rem;
+  top: 1.1rem;
+  width: 7.2rem;
+  height: 4.8rem;
+  border-left: 0.16rem solid color-mix(in srgb, var(--accent) 72%, white);
+  border-bottom: 0.16rem solid color-mix(in srgb, var(--accent) 72%, white);
+  border-radius: 0 0 0 0.4rem;
+  background:
+    radial-gradient(ellipse at 18% 72%, transparent 0 0.18rem, color-mix(in srgb, var(--accent) 70%, white) 0.2rem 0.28rem, transparent 0.3rem),
+    radial-gradient(ellipse at 42% 42%, transparent 0 0.18rem, color-mix(in srgb, var(--accent) 70%, white) 0.2rem 0.28rem, transparent 0.3rem),
+    radial-gradient(ellipse at 72% 22%, transparent 0 0.18rem, color-mix(in srgb, var(--accent) 70%, white) 0.2rem 0.28rem, transparent 0.3rem);
+}
+
+.subject-calc .folder-art::after {
+  right: 1.2rem;
+  top: 3.15rem;
+  width: 6.6rem;
+  height: 2.7rem;
+  border-top: 0.18rem solid color-mix(in srgb, var(--accent) 78%, white);
+  border-radius: 50%;
+  transform: rotate(-14deg);
+}
+
+.subject-hist .folder-art {
+  background:
+    radial-gradient(circle at 72% 28%, color-mix(in srgb, var(--accent) 58%, white) 0 0.32rem, transparent 0.36rem),
+    repeating-linear-gradient(25deg, transparent 0 0.7rem, rgba(255, 255, 255, 0.12) 0.72rem 0.78rem);
+}
+
+.subject-hist .folder-art::before {
+  right: 1rem;
+  top: 1rem;
+  width: 5.6rem;
+  height: 5.6rem;
+  border: 0.13rem solid color-mix(in srgb, var(--accent) 70%, white);
+  border-radius: 50%;
+  background:
+    linear-gradient(90deg, transparent 46%, color-mix(in srgb, var(--accent) 58%, white) 47% 52%, transparent 53%),
+    linear-gradient(0deg, transparent 46%, color-mix(in srgb, var(--accent) 58%, white) 47% 52%, transparent 53%),
+    radial-gradient(circle at 50% 50%, transparent 0 1.5rem, color-mix(in srgb, var(--accent) 30%, transparent) 1.55rem 1.65rem, transparent 1.7rem);
+  transform: rotate(-9deg);
+}
+
+.subject-hist .folder-art::after {
+  right: 4.1rem;
+  top: 0.65rem;
+  width: 2.2rem;
+  height: 6.8rem;
+  border-radius: 999px 999px 0.28rem 0.28rem;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.34), transparent 38%),
+    color-mix(in srgb, var(--accent) 54%, #fff8e8);
+  box-shadow: 1.25rem 0.55rem 0 -0.2rem color-mix(in srgb, var(--accent) 35%, #fff8e8);
+  transform: rotate(53deg);
 }
 
 .paper-panel {
