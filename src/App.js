@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-6";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-7";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
@@ -581,14 +581,19 @@ function MessageCard({ message }) {
 
 function GradeGauge({ grade, color, large = false }) {
   const needleDegrees = Math.max(-128, Math.min(128, -128 + (grade / 100) * 256));
+  const waterLevel = `${Math.max(0, Math.min(100, grade))}%`;
   return h(
     "div",
     {
       className: `gauge ${large ? "large" : ""}`,
-      style: { "--grade": grade, "--accent": color, "--needle": `${needleDegrees}deg` },
+      style: { "--grade": grade, "--accent": color, "--needle": `${needleDegrees}deg`, "--water": waterLevel },
       "aria-label": `Current grade ${grade.toFixed(1)} percent`,
     },
     h("div", { className: "gauge-face" },
+      h("div", { className: "gauge-water" },
+        h("div", { className: "gauge-wave back" }),
+        h("div", { className: "gauge-wave front" })
+      ),
       h("div", { className: "gauge-ticks" }),
       h("div", { className: "gauge-label low" }, "0"),
       h("div", { className: "gauge-label mid" }, "50"),
