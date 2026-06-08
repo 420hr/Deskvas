@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-11";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-12";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
@@ -473,8 +473,9 @@ function CourseFolder({ course, state, helpers }) {
 function CourseBinder({ course, helpers }) {
   return h(
     "article",
-    { className: "binder", style: { "--accent": course.color } },
+    { className: `binder subject-${course.id}`, style: { "--accent": course.color } },
     h("div", { className: "binder-spine" }),
+    h("span", { className: "binder-art", "aria-hidden": "true" }),
     h(
       "div",
       { className: "binder-content" },

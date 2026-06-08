@@ -1,5 +1,5 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.js?v=canvas-pass-11";
+import App from "./App.js?v=canvas-pass-12";
 
 createRoot(document.getElementById("root")).render(React.createElement(App));

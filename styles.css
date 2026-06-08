@@ -894,12 +894,14 @@ h1 {
 
 .binder {
   --accent: #55a989;
+  position: relative;
   display: grid;
   grid-template-columns: 1.1rem 1fr;
   min-height: 15rem;
   overflow: hidden;
   border-radius: 0.5rem;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 35%, var(--panel)), var(--panel));
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 35%, var(--panel)), var(--panel));
 }
 
 .binder-spine {
@@ -907,12 +909,160 @@ h1 {
 }
 
 .binder-content {
+  position: relative;
+  z-index: 2;
   padding: 1.4rem;
 }
 
 .binder-content span {
   color: var(--muted);
   font-weight: 800;
+}
+
+.binder-art {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.42;
+  pointer-events: none;
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.binder:hover .binder-art,
+.binder:focus-within .binder-art {
+  opacity: 0.68;
+  transform: scale(1.03) translateY(-0.2rem);
+}
+
+.binder-art::before,
+.binder-art::after {
+  content: "";
+  position: absolute;
+}
+
+.subject-bio .binder-art {
+  background:
+    radial-gradient(circle at 82% 28%, color-mix(in srgb, var(--accent) 60%, white) 0 0.45rem, transparent 0.5rem),
+    radial-gradient(circle at 68% 54%, color-mix(in srgb, var(--accent) 48%, white) 0 0.32rem, transparent 0.36rem),
+    linear-gradient(120deg, transparent 0 54%, rgba(255, 255, 255, 0.14) 55% 58%, transparent 59%);
+}
+
+.subject-bio .binder-art::before {
+  right: 2.1rem;
+  top: 1.3rem;
+  width: 8rem;
+  height: 8rem;
+  border: 0.16rem solid color-mix(in srgb, var(--accent) 68%, white);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent) 55%, transparent) 0 0.35rem, transparent 0.4rem),
+    repeating-linear-gradient(90deg, transparent 0 0.75rem, rgba(255, 255, 255, 0.2) 0.78rem 0.9rem);
+  transform: rotate(-18deg);
+}
+
+.subject-bio .binder-art::after {
+  right: 5.9rem;
+  top: 0.9rem;
+  width: 0.5rem;
+  height: 9rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 72%, white);
+  box-shadow: 2rem 0.35rem 0 color-mix(in srgb, var(--accent) 45%, white);
+  transform: rotate(34deg);
+}
+
+.subject-eng .binder-art {
+  background:
+    linear-gradient(115deg, transparent 0 48%, rgba(255, 255, 255, 0.2) 49% 51%, transparent 52%),
+    repeating-linear-gradient(0deg, transparent 0 1.3rem, rgba(255, 255, 255, 0.16) 1.34rem 1.42rem);
+}
+
+.subject-eng .binder-art::before {
+  right: 2.2rem;
+  top: 1.35rem;
+  width: 7.2rem;
+  height: 5.4rem;
+  border: 0.15rem solid color-mix(in srgb, var(--accent) 62%, white);
+  border-radius: 0.25rem 0.25rem 0.55rem 0.55rem;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 0.78rem, rgba(255, 255, 255, 0.22) 0.82rem 0.9rem),
+    color-mix(in srgb, var(--accent) 18%, transparent);
+  transform: rotate(7deg);
+}
+
+.subject-eng .binder-art::after {
+  right: 6.9rem;
+  top: 0.8rem;
+  width: 0.42rem;
+  height: 8rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 75%, #fff8e8);
+  box-shadow: 0.9rem -0.42rem 0 -0.1rem rgba(255, 248, 232, 0.8);
+  transform: rotate(46deg);
+}
+
+.subject-calc .binder-art {
+  background:
+    linear-gradient(115deg, transparent 0 46%, color-mix(in srgb, var(--accent) 45%, transparent) 47% 48%, transparent 49%),
+    repeating-linear-gradient(90deg, transparent 0 1.15rem, rgba(255, 255, 255, 0.13) 1.18rem 1.26rem),
+    repeating-linear-gradient(0deg, transparent 0 1.15rem, rgba(255, 255, 255, 0.11) 1.18rem 1.26rem);
+}
+
+.subject-calc .binder-art::before {
+  right: 1.4rem;
+  top: 1.4rem;
+  width: 9.5rem;
+  height: 6.4rem;
+  border-left: 0.18rem solid color-mix(in srgb, var(--accent) 72%, white);
+  border-bottom: 0.18rem solid color-mix(in srgb, var(--accent) 72%, white);
+  border-radius: 0 0 0 0.5rem;
+  background:
+    radial-gradient(ellipse at 18% 72%, transparent 0 0.22rem, color-mix(in srgb, var(--accent) 70%, white) 0.24rem 0.34rem, transparent 0.36rem),
+    radial-gradient(ellipse at 42% 42%, transparent 0 0.22rem, color-mix(in srgb, var(--accent) 70%, white) 0.24rem 0.34rem, transparent 0.36rem),
+    radial-gradient(ellipse at 72% 22%, transparent 0 0.22rem, color-mix(in srgb, var(--accent) 70%, white) 0.24rem 0.34rem, transparent 0.36rem);
+}
+
+.subject-calc .binder-art::after {
+  right: 1.8rem;
+  top: 4.1rem;
+  width: 8.7rem;
+  height: 3.4rem;
+  border-top: 0.2rem solid color-mix(in srgb, var(--accent) 78%, white);
+  border-radius: 50%;
+  transform: rotate(-14deg);
+}
+
+.subject-hist .binder-art {
+  background:
+    radial-gradient(circle at 74% 24%, color-mix(in srgb, var(--accent) 58%, white) 0 0.36rem, transparent 0.42rem),
+    repeating-linear-gradient(25deg, transparent 0 0.8rem, rgba(255, 255, 255, 0.12) 0.84rem 0.92rem);
+}
+
+.subject-hist .binder-art::before {
+  right: 1.8rem;
+  top: 1.1rem;
+  width: 7.6rem;
+  height: 7.6rem;
+  border: 0.15rem solid color-mix(in srgb, var(--accent) 70%, white);
+  border-radius: 50%;
+  background:
+    linear-gradient(90deg, transparent 46%, color-mix(in srgb, var(--accent) 58%, white) 47% 52%, transparent 53%),
+    linear-gradient(0deg, transparent 46%, color-mix(in srgb, var(--accent) 58%, white) 47% 52%, transparent 53%),
+    radial-gradient(circle at 50% 50%, transparent 0 2.1rem, color-mix(in srgb, var(--accent) 30%, transparent) 2.15rem 2.28rem, transparent 2.35rem);
+  transform: rotate(-9deg);
+}
+
+.subject-hist .binder-art::after {
+  right: 5.9rem;
+  top: 0.75rem;
+  width: 2.8rem;
+  height: 8.9rem;
+  border-radius: 999px 999px 0.35rem 0.35rem;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.34), transparent 38%),
+    color-mix(in srgb, var(--accent) 54%, #fff8e8);
+  box-shadow: 1.55rem 0.75rem 0 -0.22rem color-mix(in srgb, var(--accent) 35%, #fff8e8);
+  transform: rotate(53deg);
 }
 
 .stamp {
