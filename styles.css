@@ -412,188 +412,127 @@ h1 {
 .gauge {
   --grade: 75;
   --accent: #55a989;
-  --needle: 64deg;
   --water: 75%;
   position: relative;
   display: grid;
-  place-items: center;
-  width: 9.5rem;
-  aspect-ratio: 1;
-  border-radius: 50%;
+  gap: 0.55rem;
+  width: min(16rem, 100%);
+  min-width: 11rem;
+  padding: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+  border-radius: 1.2rem;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.05)),
-    radial-gradient(circle at 50% 58%, #111720 0 58%, #2d3740 59% 63%, #e0d8c4 64% 67%, #6d7780 68% 74%, transparent 75%),
-    linear-gradient(180deg, transparent 0 63%, rgba(0, 0, 0, 0.5) 64% 100%);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.04)),
+    color-mix(in srgb, var(--panel) 76%, #121a20);
   box-shadow:
-    inset 0 0.45rem 0.8rem rgba(255, 255, 255, 0.2),
-    inset 0 -0.8rem 1.25rem rgba(0, 0, 0, 0.28),
+    inset 0 0.12rem 0.28rem var(--inset),
+    inset 0 -0.45rem 0.9rem rgba(0, 0, 0, 0.18),
     0 0.75rem 1.3rem var(--shadow);
 }
 
 .gauge.large {
-  width: min(14rem, 45vw);
+  width: min(22rem, 100%);
 }
 
-.gauge span {
-  position: absolute;
-  z-index: 6;
-  bottom: 13%;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.18rem 0.45rem;
-  border-radius: 0.25rem;
-  background: rgba(255, 255, 255, 0.09);
-  color: #f8f3df;
-  font-size: 1.3rem;
-  font-weight: 900;
-  line-height: 1;
-  box-shadow: inset 0 0.05rem 0.12rem rgba(255, 255, 255, 0.18);
-}
-
-.gauge-face {
-  position: absolute;
-  inset: 10%;
-  border-radius: 50%;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 42%),
-    radial-gradient(circle at 50% 54%, rgba(24, 33, 43, 0.92) 0 45%, transparent 46%),
-    conic-gradient(from 218deg, #c84b4b 0 30deg, #d8b957 31deg 82deg, color-mix(in srgb, var(--accent) 82%, white) 83deg 256deg, rgba(255, 255, 255, 0.08) 257deg 270deg, transparent 271deg),
-    #101721;
+.gauge-track {
+  position: relative;
+  min-height: 4.6rem;
   overflow: hidden;
-  box-shadow: inset 0 0.7rem 1.1rem rgba(255, 255, 255, 0.08), inset 0 -0.7rem 1.4rem rgba(0, 0, 0, 0.45);
+  border: 1px solid color-mix(in srgb, var(--accent) 58%, rgba(255, 255, 255, 0.2));
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 45%),
+    color-mix(in srgb, var(--paper) 20%, #121a20);
+  box-shadow:
+    inset 0 0.25rem 0.45rem rgba(255, 255, 255, 0.18),
+    inset 0 -0.45rem 0.8rem rgba(0, 0, 0, 0.32);
 }
 
-.gauge-water {
+.gauge-liquid {
   position: absolute;
-  inset: 7%;
-  z-index: 0;
-  border-radius: 50%;
+  inset: 0;
+  width: var(--water);
+  min-width: 2.8rem;
   overflow: hidden;
+  border-radius: inherit;
   background:
-    radial-gradient(circle at 48% 42%, rgba(255, 255, 255, 0.18), transparent 32%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.16));
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 50%, white), color-mix(in srgb, var(--accent) 88%, #12202a));
   box-shadow:
-    inset 0 0 1.2rem color-mix(in srgb, var(--accent) 28%, transparent),
-    inset 0 -1rem 1.5rem rgba(0, 0, 0, 0.32);
-}
-
-.gauge-water::before {
-  content: "";
-  position: absolute;
-  left: -10%;
-  right: -10%;
-  bottom: 0;
-  height: var(--water);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--accent) 55%, white), color-mix(in srgb, var(--accent) 86%, #0f1720));
-  box-shadow:
-    inset 0 0.75rem 1rem rgba(255, 255, 255, 0.18),
-    inset 0 -0.8rem 1rem rgba(0, 0, 0, 0.24),
-    0 -0.1rem 0.6rem color-mix(in srgb, var(--accent) 68%, transparent);
-  transition: height 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    inset 0 0.8rem 1.1rem rgba(255, 255, 255, 0.26),
+    inset 0 -0.85rem 1.1rem rgba(0, 0, 0, 0.24),
+    0.25rem 0 1.1rem color-mix(in srgb, var(--accent) 55%, transparent);
+  transition: width 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .gauge-wave {
   position: absolute;
-  z-index: 1;
-  left: -45%;
-  bottom: calc(var(--water) - 0.65rem);
-  width: 190%;
-  height: 1.4rem;
-  opacity: 0.9;
+  top: 0.25rem;
+  left: -2rem;
+  width: calc(100% + 4rem);
+  height: 1rem;
+  opacity: 0.85;
   background:
-    radial-gradient(ellipse at 1rem 0.75rem, rgba(255, 255, 255, 0.72) 0 0.35rem, transparent 0.38rem) 0 0 / 2rem 1rem repeat-x;
-  filter: drop-shadow(0 0.15rem 0.25rem color-mix(in srgb, var(--accent) 65%, transparent));
+    radial-gradient(ellipse at 0.75rem 0.75rem, rgba(255, 255, 255, 0.78) 0 0.34rem, transparent 0.37rem) 0 0 / 1.55rem 0.9rem repeat-x;
+  filter: drop-shadow(0 0.12rem 0.22rem rgba(255, 255, 255, 0.28));
   animation: waterDrift 5.5s linear infinite;
 }
 
 .gauge-wave.back {
-  bottom: calc(var(--water) - 0.25rem);
-  opacity: 0.45;
+  top: 0.7rem;
+  opacity: 0.38;
   transform: translateX(-0.6rem) scaleY(0.72);
   animation-duration: 8s;
   animation-direction: reverse;
 }
 
-.gauge-wave.front {
-  opacity: 0.78;
-}
-
-.gauge-face::after {
-  content: "";
+.gauge-glass {
   position: absolute;
   inset: 0;
-  z-index: 2;
-  border-radius: 50%;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 42%);
   pointer-events: none;
-}
-
-.gauge-ticks {
-  position: absolute;
-  inset: 4%;
-  z-index: 3;
-  border-radius: 50%;
+  border-radius: inherit;
   background:
-    repeating-conic-gradient(from 218deg, #fff4d4 0 1.6deg, transparent 1.6deg 8deg);
-  mask:
-    conic-gradient(from 218deg, black 0 256deg, transparent 257deg),
-    radial-gradient(circle, transparent 0 60%, black 61% 70%, transparent 71%);
-  mask-composite: intersect;
+    linear-gradient(105deg, rgba(255, 255, 255, 0.42) 0 9%, transparent 10% 37%, rgba(255, 255, 255, 0.16) 38% 46%, transparent 47%),
+    repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(255, 255, 255, 0.18) calc(10% - 1px) 10%);
+  box-shadow: inset 0 0 0 0.08rem rgba(255, 255, 255, 0.12);
 }
 
-.gauge-needle {
+.gauge-score {
   position: absolute;
-  z-index: 7;
-  left: 50%;
-  bottom: 50%;
-  width: 0.3rem;
-  height: 42%;
-  border-radius: 999px 999px 0.08rem 0.08rem;
-  background: linear-gradient(180deg, #fff8da 0 8%, #f05d54 9% 54%, #8f202b 55% 100%);
-  box-shadow: 0 0 0.65rem rgba(215, 77, 69, 0.78), 0 0.18rem 0.25rem rgba(0, 0, 0, 0.4);
-  transform: translateX(-50%) rotate(var(--needle));
-  transform-origin: 50% 100%;
-  transition: transform 260ms ease;
-}
-
-.gauge-label {
-  position: absolute;
-  z-index: 4;
-  color: rgba(255, 248, 226, 0.82);
-  font-size: 0.56rem;
-  font-weight: 900;
-  line-height: 1;
-  text-shadow: 0 0.08rem 0.18rem rgba(0, 0, 0, 0.7);
-}
-
-.gauge-label.low {
-  left: 17%;
-  top: 58%;
-}
-
-.gauge-label.mid {
-  left: 50%;
-  top: 19%;
-  transform: translateX(-50%);
-}
-
-.gauge-label.high {
-  right: 12%;
-  top: 58%;
-}
-
-.gauge-hub {
-  position: absolute;
-  z-index: 8;
+  z-index: 2;
   left: 50%;
   top: 50%;
-  width: 1.15rem;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 28%, #fff3c8, #b88d48 46%, #4d5660 47%);
-  box-shadow: 0 0.2rem 0.45rem rgba(0, 0, 0, 0.45);
   transform: translate(-50%, -50%);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(12, 18, 24, 0.55);
+  color: #fff8e8;
+  font-size: 1.45rem;
+  font-weight: 950;
+  line-height: 1;
+  box-shadow: inset 0 0.08rem 0.14rem rgba(255, 255, 255, 0.18), 0 0.35rem 0.75rem rgba(0, 0, 0, 0.25);
+}
+
+.gauge-marker {
+  position: absolute;
+  z-index: 3;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  left: var(--water);
+  width: 0.35rem;
+  border-radius: 999px;
+  background: #fff8e8;
+  box-shadow: 0 0 0.6rem color-mix(in srgb, var(--accent) 72%, white);
+  transform: translateX(-50%);
+  transition: left 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gauge-scale {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.3rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 850;
 }
 
 @keyframes waterDrift {
