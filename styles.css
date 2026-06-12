@@ -136,6 +136,7 @@ nav {
 .slip button,
 .assignment-card button,
 .binder button,
+.discussion-card button,
 .grade-detail-head select,
 .paper-panel button,
 .theme-switch,
@@ -1423,6 +1424,20 @@ input[type="range"] {
 
 .discussion-card p {
   color: var(--muted);
+}
+
+.discussion-card button {
+  min-height: 2.35rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.45rem;
+  color: var(--ink);
+}
+
+.discussion-card button:hover,
+.discussion-card button:focus-visible {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent, #5c7f81) 28%, var(--button)), var(--button));
+  transform: translateY(-0.08rem);
 }
 
 .discussion-meta {
