@@ -1,23 +1,43 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-15";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-16";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
 const courseNavItems = ["Home", "Syllabus", "Modules", "Announcements", "Discussions", "Assignments", "People"];
-const testProfile = {
-  name: "Avery Reed",
-  initials: "AR",
-  email: "avery.reed@northlake.edu",
-  pronouns: "she/her",
-  language: "English",
-  timeZone: "America/New_York",
-  term: "Spring term",
+const accounts = {
+  avery: {
+    id: "avery",
+    name: "Avery Reed",
+    initials: "AR",
+    email: "avery.reed@northlake.edu",
+    pronouns: "she/her",
+    language: "English",
+    timeZone: "America/New_York",
+    term: "Spring term",
+    role: "student",
+    label: "Student",
+    courses: ["bio", "eng", "calc", "hist"],
+  },
+  rivera: {
+    id: "rivera",
+    name: "Dr. Elena Rivera",
+    initials: "ER",
+    email: "erivera@northlake.edu",
+    pronouns: "she/her",
+    language: "English",
+    timeZone: "America/New_York",
+    term: "Faculty account",
+    role: "teacher",
+    label: "Teacher",
+    courses: ["bio"],
+  },
 };
 
 function createInitialState() {
   const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
   return {
     loggedIn: saved.loggedIn ?? true,
+    currentUserId: saved.currentUserId || "avery",
     section: saved.section || "Dashboard",
     selectedCourse: saved.selectedCourse || "bio",
     courseTab: saved.courseTab || "Home",
@@ -31,6 +51,11 @@ function createInitialState() {
     readDiscussions: saved.readDiscussions || {},
     discussionDrafts: saved.discussionDrafts || {},
     discussionReplies: saved.discussionReplies || {},
+    announcements: saved.announcements || {},
+    announcementEdits: saved.announcementEdits || {},
+    deletedAnnouncements: saved.deletedAnnouncements || {},
+    announcementForm: saved.announcementForm || { title: "", detail: "" },
+    editingAnnouncement: saved.editingAnnouncement || null,
   };
 }
 
@@ -64,6 +89,7 @@ export default function App() {
 
 function createHelpers(state, setState) {
   const update = (patch) => setState((current) => ({ ...current, ...patch }));
+  const getCurrentUser = () => accounts[state.currentUserId] || accounts.avery;
   const assignmentStatus = (assignment) => (state.completed[assignment.id] ? "complete" : assignment.status);
   const getCourse = (id = state.selectedCourse) => courses.find((course) => course.id === id) || courses[0];
   const getAssignments = () =>
@@ -78,10 +104,25 @@ function createHelpers(state, setState) {
         realStatus: assignmentStatus(assignment),
       }))
     );
+  const canManageCourse = (course) => {
+    const user = getCurrentUser();
+    return user.role === "teacher" && user.courses.includes(course.id);
+  };
+  const getAnnouncements = (course) => {
+    const base = course.activity
+      .filter((event) => ["Announcement", "Assignment", "Reminder"].includes(event.type))
+      .filter((event) => !state.deletedAnnouncements[event.id])
+      .map((event) => ({ ...event, ...(state.announcementEdits[event.id] || {}), source: "base" }));
+    const custom = (state.announcements[course.id] || []).filter((event) => !state.deletedAnnouncements[event.id]).map((event) => ({ ...event, source: "custom" }));
+    return [...base, ...custom].sort((a, b) => b.date.localeCompare(a.date));
+  };
 
   return {
     getCourse,
     getAssignments,
+    getCurrentUser,
+    canManageCourse,
+    getAnnouncements,
     assignmentStatus,
     setSection: (section) => update({ section }),
     setCourse: (selectedCourse) => update({ selectedCourse }),
@@ -103,10 +144,11 @@ function createHelpers(state, setState) {
       setState((current) => {
         const body = (current.discussionDrafts[discussionId] || "").trim();
         if (!body) return current;
+        const user = accounts[current.currentUserId] || accounts.avery;
         const reply = {
           id: `${discussionId}-avery-${Date.now()}`,
-          author: testProfile.name,
-          role: "Student",
+          author: user.name,
+          role: user.label,
           date: new Date().toISOString().slice(0, 10),
           body,
           children: [],
@@ -126,8 +168,67 @@ function createHelpers(state, setState) {
     setInboxFilter: (inboxFilter) => update({ inboxFilter }),
     toggleProfileMenu: () => update({ profileMenuOpen: !state.profileMenuOpen }),
     viewProfile: () => update({ section: "Profile", profileMenuOpen: false }),
-    login: () => update({ loggedIn: true, section: "Dashboard", profileMenuOpen: false }),
+    login: (currentUserId) => update({ loggedIn: true, currentUserId, selectedCourse: currentUserId === "rivera" ? "bio" : state.selectedCourse, section: "Dashboard", profileMenuOpen: false }),
     logout: () => update({ loggedIn: false, section: "Dashboard", profileMenuOpen: false }),
+    setAnnouncementForm: (field, value) =>
+      setState((current) => ({ ...current, announcementForm: { ...current.announcementForm, [field]: value } })),
+    startAnnouncementEdit: (announcement) =>
+      update({
+        editingAnnouncement: announcement.id,
+        announcementForm: { title: announcement.title, detail: announcement.detail },
+      }),
+    cancelAnnouncementEdit: () => update({ editingAnnouncement: null, announcementForm: { title: "", detail: "" } }),
+    saveAnnouncement: (courseId) =>
+      setState((current) => {
+        const title = current.announcementForm.title.trim();
+        const detail = current.announcementForm.detail.trim();
+        if (!title || !detail) return current;
+        const editingId = current.editingAnnouncement;
+        if (editingId) {
+          const courseAnnouncements = current.announcements[courseId] || [];
+          const customExists = courseAnnouncements.some((announcement) => announcement.id === editingId);
+          return {
+            ...current,
+            announcements: customExists
+              ? {
+                  ...current.announcements,
+                  [courseId]: courseAnnouncements.map((announcement) => (announcement.id === editingId ? { ...announcement, title, detail } : announcement)),
+                }
+              : current.announcements,
+            announcementEdits: customExists ? current.announcementEdits : { ...current.announcementEdits, [editingId]: { title, detail } },
+            announcementForm: { title: "", detail: "" },
+            editingAnnouncement: null,
+          };
+        }
+        const announcement = {
+          id: `${courseId}-ann-${Date.now()}`,
+          type: "Announcement",
+          title,
+          detail,
+          date: new Date().toISOString().slice(0, 10),
+          author: (accounts[current.currentUserId] || accounts.rivera).name,
+        };
+        return {
+          ...current,
+          announcements: { ...current.announcements, [courseId]: [announcement, ...(current.announcements[courseId] || [])] },
+          announcementForm: { title: "", detail: "" },
+          editingAnnouncement: null,
+        };
+      }),
+    deleteAnnouncement: (courseId, announcementId) =>
+      setState((current) => {
+        const courseAnnouncements = current.announcements[courseId] || [];
+        return {
+          ...current,
+          announcements: {
+            ...current.announcements,
+            [courseId]: courseAnnouncements.filter((announcement) => announcement.id !== announcementId),
+          },
+          deletedAnnouncements: { ...current.deletedAnnouncements, [announcementId]: true },
+          editingAnnouncement: current.editingAnnouncement === announcementId ? null : current.editingAnnouncement,
+          announcementForm: current.editingAnnouncement === announcementId ? { title: "", detail: "" } : current.announcementForm,
+        };
+      }),
     toggleComplete: (id) => setState((current) => ({ ...current, completed: { ...current.completed, [id]: !current.completed[id] } })),
     setTarget: (courseId, target) => setState((current) => ({ ...current, targets: { ...current.targets, [courseId]: Number(target) } })),
     toggleTheme: () => update({ theme: state.theme === "light" ? "dark" : "light" }),
@@ -171,6 +272,7 @@ function Sidebar({ state, helpers }) {
 }
 
 function LoginPage({ helpers }) {
+  const accountList = [accounts.avery, accounts.rivera];
   return h(
     "main",
     { className: "login-page" },
@@ -178,21 +280,27 @@ function LoginPage({ helpers }) {
       "section",
       { className: "login-card" },
       h("div", { className: "brand-mark login-mark" }, "DC"),
-      h("span", { className: "eyebrow" }, "Student login"),
+      h("span", { className: "eyebrow" }, "Prototype login"),
       h("h1", null, "Welcome back to DeskCanvas."),
-      h("p", null, "Use the test profile to enter the prototype student dashboard."),
+      h("p", null, "Choose a fake account to test student and teacher permissions."),
       h(
         "div",
-        { className: "login-profile" },
-        h("span", { className: "avatar" }, testProfile.initials),
-        h("div", null, h("strong", null, testProfile.name), h("small", null, testProfile.email))
-      ),
-      h("button", { className: "primary login-button", onClick: helpers.login }, "Log in as Avery")
+        { className: "login-options" },
+        accountList.map((account) =>
+          h(
+            "button",
+            { key: account.id, className: "login-profile", onClick: () => helpers.login(account.id) },
+            h("span", { className: "avatar" }, account.initials),
+            h("div", null, h("strong", null, account.name), h("small", null, `${account.label} - ${account.email}`))
+          )
+        )
+      )
     )
   );
 }
 
 function Topbar({ state, helpers }) {
+  const user = helpers.getCurrentUser();
   return h(
     "header",
     { className: "topbar" },
@@ -213,8 +321,8 @@ function Topbar({ state, helpers }) {
           "aria-expanded": state.profileMenuOpen,
           onClick: helpers.toggleProfileMenu,
         },
-        h("span", { className: "avatar" }, testProfile.initials),
-        h("div", null, h("strong", null, testProfile.name), h("small", null, testProfile.term))
+        h("span", { className: "avatar" }, user.initials),
+        h("div", null, h("strong", null, user.name), h("small", null, `${user.label} - ${user.term}`))
       ),
       state.profileMenuOpen
         ? h(
@@ -229,7 +337,7 @@ function Topbar({ state, helpers }) {
 }
 
 function SectionContent({ course, state, helpers }) {
-  if (state.section === "Profile") return h(ProfileView);
+  if (state.section === "Profile") return h(ProfileView, { helpers });
   if (state.section === "Courses") return h(CoursesView, { helpers });
   if (state.section === "Course") return h(CourseDetailView, { course, state, helpers });
   if (state.section === "To-Do") return h(TodoView, { helpers });
@@ -241,13 +349,15 @@ function SectionContent({ course, state, helpers }) {
   return h(DashboardView, { course, state, helpers });
 }
 
-function ProfileView() {
+function ProfileView({ helpers }) {
+  const user = helpers.getCurrentUser();
   const details = [
-    ["Name", testProfile.name],
-    ["Email", testProfile.email],
-    ["Pronouns", testProfile.pronouns],
-    ["Language", testProfile.language],
-    ["Time zone", testProfile.timeZone],
+    ["Name", user.name],
+    ["Email", user.email],
+    ["Role", user.label],
+    ["Pronouns", user.pronouns],
+    ["Language", user.language],
+    ["Time zone", user.timeZone],
   ];
 
   return h(
@@ -256,8 +366,8 @@ function ProfileView() {
     h(
       "div",
       { className: "profile-card" },
-      h("span", { className: "avatar profile-avatar" }, testProfile.initials),
-      h("div", null, h("span", { className: "eyebrow" }, "Test profile"), h("h2", null, testProfile.name), h("p", null, "This fake profile powers the prototype login and account menu."))
+      h("span", { className: "avatar profile-avatar" }, user.initials),
+      h("div", null, h("span", { className: "eyebrow" }, "Test profile"), h("h2", null, user.name), h("p", null, user.role === "teacher" ? "This fake teacher account can manage BIO 221 announcements." : "This fake student account powers the prototype student dashboard."))
     ),
     h(
       "div",
@@ -495,7 +605,7 @@ function CourseDetailView({ course, state, helpers }) {
 function CourseTabContent({ course, state, helpers, assignments, active }) {
   if (state.courseTab === "Syllabus") return h(CourseSyllabusTab, { course });
   if (state.courseTab === "Modules") return h(CourseModulesTab, { course });
-  if (state.courseTab === "Announcements") return h(CourseAnnouncementsTab, { course });
+  if (state.courseTab === "Announcements") return h(CourseAnnouncementsTab, { course, state, helpers });
   if (state.courseTab === "Discussions") return h(CourseDiscussionsTab, { course, state, helpers });
   if (state.courseTab === "Assignments") return h(CourseAssignmentsTab, { assignments, helpers });
   if (state.courseTab === "People") return h(CoursePeopleTab, { course });
@@ -527,9 +637,75 @@ function CourseModulesTab({ course }) {
   return h("div", { className: "paper-panel course-tab-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Modules"), h("span", null, `${course.modules.length} groups`)), course.modules.map((module) => h(ModuleCard, { key: module.id, module })));
 }
 
-function CourseAnnouncementsTab({ course }) {
-  const announcements = course.activity.filter((event) => ["Announcement", "Assignment", "Reminder"].includes(event.type));
-  return h("div", { className: "paper-panel course-tab-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Announcements"), h("span", null, course.name)), announcements.length ? announcements.map((event) => h(ActivityItem, { key: event.id, event: { ...event, courseName: course.name, courseColor: course.color } })) : h("p", { className: "empty" }, "No announcements yet."));
+function CourseAnnouncementsTab({ course, state, helpers }) {
+  const announcements = helpers.getAnnouncements(course);
+  const canManage = helpers.canManageCourse(course);
+  const user = helpers.getCurrentUser();
+  const readOnlyMessage = user.role === "teacher" ? "This course is outside your teacher permissions, so announcements are read-only." : "Announcements are read-only for students.";
+  return h(
+    "div",
+    { className: "announcement-space course-tab-panel" },
+    canManage ? h(AnnouncementEditor, { course, state, helpers }) : h("div", { className: "paper-panel role-note" }, h("strong", null, "Read-only view"), h("p", null, readOnlyMessage)),
+    h(
+      "div",
+      { className: "paper-panel" },
+      h("div", { className: "panel-head" }, h("h2", null, "Announcements"), h("span", null, course.name)),
+      announcements.length
+        ? announcements.map((event) => h(AnnouncementCard, { key: event.id, announcement: { ...event, courseName: course.name, courseColor: course.color }, canManage, helpers, course }))
+        : h("p", { className: "empty" }, "No announcements yet.")
+    )
+  );
+}
+
+function AnnouncementEditor({ course, state, helpers }) {
+  const editing = Boolean(state.editingAnnouncement);
+  return h(
+    "form",
+    {
+      className: "announcement-editor paper-panel",
+      onSubmit: (event) => {
+        event.preventDefault();
+        helpers.saveAnnouncement(course.id);
+      },
+    },
+    h("div", { className: "panel-head" }, h("h2", null, editing ? "Edit announcement" : "Create announcement"), h("span", null, "Teacher tools")),
+    h("label", null, "Title"),
+    h("input", {
+      value: state.announcementForm.title,
+      placeholder: "Lab room change, review session, new reading...",
+      onChange: (event) => helpers.setAnnouncementForm("title", event.target.value),
+    }),
+    h("label", null, "Message"),
+    h("textarea", {
+      value: state.announcementForm.detail,
+      placeholder: "Write the note students should see in this course.",
+      onChange: (event) => helpers.setAnnouncementForm("detail", event.target.value),
+    }),
+    h(
+      "div",
+      { className: "editor-actions" },
+      h("button", { className: "primary", disabled: !state.announcementForm.title.trim() || !state.announcementForm.detail.trim() }, editing ? "Save announcement" : "Post announcement"),
+      editing ? h("button", { type: "button", onClick: helpers.cancelAnnouncementEdit }, "Cancel") : null
+    )
+  );
+}
+
+function AnnouncementCard({ announcement, canManage, helpers, course }) {
+  return h(
+    "article",
+    { className: "activity-item announcement-card", style: { "--accent": announcement.courseColor || course.color } },
+    h("span", null, `${announcement.type} - ${formatDate(announcement.date)}`),
+    h("strong", null, announcement.title),
+    h("p", null, `${announcement.courseName}: ${announcement.detail}`),
+    canManage
+      ? h(
+          "div",
+          { className: "announcement-actions" },
+          h("button", { onClick: () => helpers.startAnnouncementEdit(announcement) }, "Edit"),
+          h("button", { onClick: () => helpers.deleteAnnouncement(course.id, announcement.id) }, "Delete")
+        )
+      : null
+  );
 }
 
 function CourseDiscussionsTab({ course, state, helpers }) {
