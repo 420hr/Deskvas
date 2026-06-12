@@ -1,9 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-16";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-17";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
 const courseNavItems = ["Home", "Syllabus", "Modules", "Announcements", "Discussions", "Assignments", "People"];
+const emptyAssignmentForm = {
+  title: "",
+  description: "",
+  due: "",
+  points: "20",
+  group: "Homework",
+  module: "",
+  type: "Assignment",
+  published: true,
+};
 const accounts = {
   avery: {
     id: "avery",
@@ -56,6 +66,11 @@ function createInitialState() {
     deletedAnnouncements: saved.deletedAnnouncements || {},
     announcementForm: saved.announcementForm || { title: "", detail: "" },
     editingAnnouncement: saved.editingAnnouncement || null,
+    assignments: saved.assignments || {},
+    assignmentEdits: saved.assignmentEdits || {},
+    deletedAssignments: saved.deletedAssignments || {},
+    assignmentForm: saved.assignmentForm || emptyAssignmentForm,
+    editingAssignment: saved.editingAssignment || null,
   };
 }
 
@@ -90,24 +105,50 @@ export default function App() {
 function createHelpers(state, setState) {
   const update = (patch) => setState((current) => ({ ...current, ...patch }));
   const getCurrentUser = () => accounts[state.currentUserId] || accounts.avery;
-  const assignmentStatus = (assignment) => (state.completed[assignment.id] ? "complete" : assignment.status);
   const getCourse = (id = state.selectedCourse) => courses.find((course) => course.id === id) || courses[0];
-  const getAssignments = () =>
-    courses.flatMap((course) =>
-      course.assignments.map((assignment) => ({
-        ...assignment,
-        courseId: course.id,
-        courseName: course.name,
-        courseTitle: course.title,
-        courseColor: course.color,
-        instructor: course.instructor,
-        realStatus: assignmentStatus(assignment),
-      }))
-    );
   const canManageCourse = (course) => {
     const user = getCurrentUser();
     return user.role === "teacher" && user.courses.includes(course.id);
   };
+  const assignmentStatus = (assignment) => (state.completed[assignment.id] ? "complete" : assignment.status);
+  const normalizeAssignment = (course, assignment) => ({
+    ...assignment,
+    due: assignment.due || null,
+    points: Number(assignment.points || 0),
+    impact: Number(assignment.impact ?? 1),
+    published: assignment.published ?? true,
+    courseId: course.id,
+    courseName: course.name,
+    courseTitle: course.title,
+    courseColor: course.color,
+    instructor: course.instructor,
+    realStatus: assignmentStatus(assignment),
+  });
+  const getCourseAssignments = (course) => {
+    const base = course.assignments
+      .filter((assignment) => !state.deletedAssignments[assignment.id])
+      .map((assignment) => normalizeAssignment(course, { ...assignment, ...(state.assignmentEdits[assignment.id] || {}), source: "base" }));
+    const custom = (state.assignments[course.id] || [])
+      .filter((assignment) => !state.deletedAssignments[assignment.id])
+      .map((assignment) => normalizeAssignment(course, { ...assignment, source: "custom" }));
+    return [...base, ...custom].filter((assignment) => canManageCourse(course) || assignment.published);
+  };
+  const getCourseModules = (course) => {
+    const modules = course.modules.map((module) => ({ ...module, items: [...module.items] }));
+    getCourseAssignments(course).forEach((assignment) => {
+      if (!assignment.module) return;
+      const existing = modules.find((module) => module.title === assignment.module);
+      if (existing && !existing.items.includes(assignment.title)) {
+        existing.items.push(assignment.title);
+        existing.total += 1;
+      } else if (!existing) {
+        modules.push({ id: `${course.id}-module-${assignment.module.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, title: assignment.module, items: [assignment.title], complete: assignment.realStatus === "complete" ? 1 : 0, total: 1 });
+      }
+    });
+    return modules;
+  };
+  const getAssignments = () =>
+    courses.flatMap((course) => getCourseAssignments(course));
   const getAnnouncements = (course) => {
     const base = course.activity
       .filter((event) => ["Announcement", "Assignment", "Reminder"].includes(event.type))
@@ -120,6 +161,8 @@ function createHelpers(state, setState) {
   return {
     getCourse,
     getAssignments,
+    getCourseAssignments,
+    getCourseModules,
     getCurrentUser,
     canManageCourse,
     getAnnouncements,
@@ -229,6 +272,74 @@ function createHelpers(state, setState) {
           announcementForm: current.editingAnnouncement === announcementId ? { title: "", detail: "" } : current.announcementForm,
         };
       }),
+    setAssignmentForm: (field, value) =>
+      setState((current) => ({ ...current, assignmentForm: { ...current.assignmentForm, [field]: field === "published" ? Boolean(value) : value } })),
+    startAssignmentEdit: (assignment) =>
+      update({
+        editingAssignment: assignment.id,
+        assignmentForm: {
+          title: assignment.title,
+          description: assignment.description || "",
+          due: assignment.due || "",
+          points: String(assignment.points || ""),
+          group: assignment.group || "Homework",
+          module: assignment.module || "",
+          type: assignment.type || "Assignment",
+          published: assignment.published ?? true,
+        },
+      }),
+    cancelAssignmentEdit: () => update({ editingAssignment: null, assignmentForm: emptyAssignmentForm }),
+    saveAssignment: (courseId) =>
+      setState((current) => {
+        const form = current.assignmentForm;
+        const title = form.title.trim();
+        if (!title) return current;
+        const assignment = {
+          title,
+          description: form.description.trim(),
+          due: form.due || null,
+          points: Number(form.points || 0),
+          group: form.group || "Homework",
+          module: form.module || "Unfiled",
+          type: form.type || "Assignment",
+          score: null,
+          status: "upcoming",
+          impact: Math.max(0.5, Math.min(5, Number(form.points || 20) / 12)),
+          submitted: false,
+          comments: false,
+          rubric: false,
+          published: form.published,
+        };
+        const editingId = current.editingAssignment;
+        if (editingId) {
+          const courseAssignments = current.assignments[courseId] || [];
+          const customExists = courseAssignments.some((item) => item.id === editingId);
+          return {
+            ...current,
+            assignments: customExists
+              ? { ...current.assignments, [courseId]: courseAssignments.map((item) => (item.id === editingId ? { ...item, ...assignment, id: editingId } : item)) }
+              : current.assignments,
+            assignmentEdits: customExists ? current.assignmentEdits : { ...current.assignmentEdits, [editingId]: assignment },
+            assignmentForm: emptyAssignmentForm,
+            editingAssignment: null,
+          };
+        }
+        const newAssignment = { ...assignment, id: `${courseId}-custom-${Date.now()}` };
+        return {
+          ...current,
+          assignments: { ...current.assignments, [courseId]: [newAssignment, ...(current.assignments[courseId] || [])] },
+          assignmentForm: emptyAssignmentForm,
+          editingAssignment: null,
+        };
+      }),
+    deleteAssignment: (courseId, assignmentId) =>
+      setState((current) => ({
+        ...current,
+        assignments: { ...current.assignments, [courseId]: (current.assignments[courseId] || []).filter((assignment) => assignment.id !== assignmentId) },
+        deletedAssignments: { ...current.deletedAssignments, [assignmentId]: true },
+        editingAssignment: current.editingAssignment === assignmentId ? null : current.editingAssignment,
+        assignmentForm: current.editingAssignment === assignmentId ? emptyAssignmentForm : current.assignmentForm,
+      })),
     toggleComplete: (id) => setState((current) => ({ ...current, completed: { ...current.completed, [id]: !current.completed[id] } })),
     setTarget: (courseId, target) => setState((current) => ({ ...current, targets: { ...current.targets, [courseId]: Number(target) } })),
     toggleTheme: () => update({ theme: state.theme === "light" ? "dark" : "light" }),
@@ -604,22 +715,44 @@ function CourseDetailView({ course, state, helpers }) {
 
 function CourseTabContent({ course, state, helpers, assignments, active }) {
   if (state.courseTab === "Syllabus") return h(CourseSyllabusTab, { course });
-  if (state.courseTab === "Modules") return h(CourseModulesTab, { course });
+  if (state.courseTab === "Modules") return h(CourseModulesTab, { course, helpers });
   if (state.courseTab === "Announcements") return h(CourseAnnouncementsTab, { course, state, helpers });
   if (state.courseTab === "Discussions") return h(CourseDiscussionsTab, { course, state, helpers });
-  if (state.courseTab === "Assignments") return h(CourseAssignmentsTab, { assignments, helpers });
-  if (state.courseTab === "People") return h(CoursePeopleTab, { course });
+  if (state.courseTab === "Assignments") return h(CourseAssignmentsTab, { course, assignments, state, helpers });
+  if (state.courseTab === "People") return h(CoursePeopleTab, { course, helpers });
   return h(CourseHomeTab, { course, helpers, assignments, active });
 }
 
 function CourseHomeTab({ course, helpers, assignments, active }) {
+  const canManage = helpers.canManageCourse(course);
   return h(
     "div",
     { className: "detail-grid course-tab-panel" },
     h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Overview"), h("span", null, course.name)), h("p", null, course.syllabus.description), h("div", { className: "mini-meter" }, h(GradeGauge, { grade: course.grade, color: course.color }))),
     h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Active Work"), h("span", null, `${active.length} items`)), active.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers }))),
     h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Recent Activity"), h("span", null, course.name)), course.activity.map((event) => h(ActivityItem, { key: event.id, event: { ...event, courseName: course.name, courseColor: course.color } }))),
-    h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Upcoming"), h("span", null, `${assignments.length} total`)), assignments.filter((assignment) => assignment.realStatus !== "complete").slice(0, 3).map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })))
+    h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Upcoming"), h("span", null, `${assignments.length} total`)), assignments.filter((assignment) => assignment.realStatus !== "complete").slice(0, 3).map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers }))),
+    canManage ? h(TeacherCommandPanel, { course, assignments }) : null
+  );
+}
+
+function TeacherCommandPanel({ course, assignments }) {
+  const roster = sampleRoster(course);
+  const average = Math.round(roster.reduce((sum, student) => sum + student.grade, 0) / roster.length);
+  const unpublished = assignments.filter((assignment) => !assignment.published).length;
+  const missing = roster.reduce((sum, student) => sum + student.missing, 0);
+  return h(
+    "div",
+    { className: "paper-panel wide-panel teacher-command" },
+    h("div", { className: "panel-head" }, h("h2", null, "Instructor Command Desk"), h("span", null, "BIO 221 tools")),
+    h(
+      "div",
+      { className: "ledger-grid" },
+      h("span", null, "Class average"), h("strong", null, `${average}%`),
+      h("span", null, "Missing submissions"), h("strong", null, missing),
+      h("span", null, "Unpublished items"), h("strong", null, unpublished),
+      h("span", null, "Scheduling"), h("strong", null, "Office hours and lab events ready for next pass")
+    )
   );
 }
 
@@ -633,8 +766,9 @@ function CourseSyllabusTab({ course }) {
   );
 }
 
-function CourseModulesTab({ course }) {
-  return h("div", { className: "paper-panel course-tab-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Modules"), h("span", null, `${course.modules.length} groups`)), course.modules.map((module) => h(ModuleCard, { key: module.id, module })));
+function CourseModulesTab({ course, helpers }) {
+  const modules = helpers.getCourseModules(course);
+  return h("div", { className: "paper-panel course-tab-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Modules"), h("span", null, `${modules.length} groups`)), helpers.canManageCourse(course) ? h("div", { className: "role-note module-note" }, h("strong", null, "Teacher module tools"), h("p", null, "New assignment modules appear here automatically. Full drag-to-reorder module editing is queued for the next pass.")) : null, modules.map((module) => h(ModuleCard, { key: module.id, module })));
 }
 
 function CourseAnnouncementsTab({ course, state, helpers }) {
@@ -784,15 +918,66 @@ function ReplyCard({ reply }) {
   );
 }
 
-function CourseAssignmentsTab({ assignments, helpers }) {
-  return h("div", { className: "assignment-board course-tab-panel" }, assignments.map((assignment) => h(AssignmentCard, { key: assignment.id, assignment, helpers })));
+function CourseAssignmentsTab({ course, assignments, state, helpers }) {
+  const canManage = helpers.canManageCourse(course);
+  return h(
+    "div",
+    { className: "teacher-assignment-space course-tab-panel" },
+    canManage ? h(AssignmentEditor, { course, state, helpers }) : h("div", { className: "paper-panel role-note" }, h("strong", null, "Student view"), h("p", null, "Assignments are read-only except for your completion status.")),
+    h("div", { className: "assignment-board" }, assignments.map((assignment) => h(AssignmentCard, { key: assignment.id, assignment, helpers, canManage, course })))
+  );
 }
 
-function CoursePeopleTab({ course }) {
-  return h("div", { className: "people-board course-tab-panel" }, course.people.map((person) => h("article", { key: person.email, className: "person-card" }, h("span", { className: "avatar" }, initialsFor(person.name)), h("div", null, h("h2", null, person.name), h("p", null, person.role), h("small", null, person.email)))));
+function AssignmentEditor({ course, state, helpers }) {
+  const editing = Boolean(state.editingAssignment);
+  return h(
+    "form",
+    {
+      className: "assignment-editor paper-panel",
+      onSubmit: (event) => {
+        event.preventDefault();
+        helpers.saveAssignment(course.id);
+      },
+    },
+    h("div", { className: "panel-head" }, h("h2", null, editing ? "Edit assignment" : "Create assignment"), h("span", null, "Teacher clipboard")),
+    h("label", null, "Title"),
+    h("input", { value: state.assignmentForm.title, placeholder: "Lab report, quiz, reading notes...", onChange: (event) => helpers.setAssignmentForm("title", event.target.value) }),
+    h("label", null, "Description"),
+    h("textarea", { value: state.assignmentForm.description, placeholder: "Instructions students should see.", onChange: (event) => helpers.setAssignmentForm("description", event.target.value) }),
+    h(
+      "div",
+      { className: "form-grid" },
+      h("label", null, "Due date", h("input", { type: "date", value: state.assignmentForm.due, onChange: (event) => helpers.setAssignmentForm("due", event.target.value) })),
+      h("label", null, "Points", h("input", { type: "number", min: "0", value: state.assignmentForm.points, onChange: (event) => helpers.setAssignmentForm("points", event.target.value) })),
+      h("label", null, "Group", h("input", { value: state.assignmentForm.group, onChange: (event) => helpers.setAssignmentForm("group", event.target.value) })),
+      h("label", null, "Module", h("input", { value: state.assignmentForm.module, onChange: (event) => helpers.setAssignmentForm("module", event.target.value) })),
+      h("label", null, "Type", h("select", { value: state.assignmentForm.type, onChange: (event) => helpers.setAssignmentForm("type", event.target.value) }, ["Assignment", "Quiz", "Discussion", "Reading", "Page"].map((type) => h("option", { key: type, value: type }, type)))),
+      h("label", { className: "check-row" }, h("input", { type: "checkbox", checked: state.assignmentForm.published, onChange: (event) => helpers.setAssignmentForm("published", event.target.checked) }), "Published")
+    ),
+    h(
+      "div",
+      { className: "editor-actions" },
+      h("button", { className: "primary", disabled: !state.assignmentForm.title.trim() }, editing ? "Save assignment" : "Create assignment"),
+      editing ? h("button", { type: "button", onClick: helpers.cancelAssignmentEdit }, "Cancel") : null
+    )
+  );
+}
+
+function CoursePeopleTab({ course, helpers }) {
+  const canManage = helpers.canManageCourse(course);
+  const roster = canManage ? sampleRoster(course) : course.people;
+  return h(
+    "div",
+    { className: "people-board course-tab-panel" },
+    canManage ? h("article", { className: "person-card roster-summary" }, h("span", { className: "avatar" }, "GB"), h("div", null, h("h2", null, "Gradebook roster"), h("p", null, "Teacher view includes fake student grade, progress, and missing-work snapshots."), h("small", null, "Message buttons can connect to Inbox in a later pass."))) : null,
+    roster.map((person) => h("article", { key: person.email, className: "person-card" }, h("span", { className: "avatar" }, initialsFor(person.name)), h("div", null, h("h2", null, person.name), h("p", null, person.role || `${person.grade}% current grade - ${person.missing} missing`), h("small", null, person.email || `${person.progress}% module progress`))))
+  );
 }
 
 function SettingsView({ state, helpers }) {
+  const user = helpers.getCurrentUser();
+  const bio = helpers.getCourse("bio");
+  const canManageBio = helpers.canManageCourse(bio);
   return h(
     "section",
     { className: "settings-panel" },
@@ -803,7 +988,16 @@ function SettingsView({ state, helpers }) {
       h("span", { className: state.theme === "light" ? "active" : "" }, "Light"),
       h("span", { className: state.theme === "dark" ? "active" : "" }, "Dark")
     ),
-    h("div", { className: "settings-card" }, h("h3", null, "Prototype behavior"), h("p", null, "Completion toggles and target grades are saved in local browser storage."))
+    h("div", { className: "settings-card" }, h("h3", null, "Prototype behavior"), h("p", null, "Completion toggles, target grades, teacher announcements, and teacher assignments are saved in local browser storage.")),
+    canManageBio
+      ? h(
+          "div",
+          { className: "settings-card teacher-ledger" },
+          h("h3", null, "BIO 221 Course Settings"),
+          h("p", null, "Dr. Rivera can manage BIO 221 content. Editable course name, room, syllabus, grading weights, late policy, and publish status are represented here as the next settings workflow."),
+          h("div", { className: "ledger-grid" }, h("span", null, "Visibility"), h("strong", null, "Published"), h("span", null, "Late policy"), h("strong", null, "Flag late after due date"), h("span", null, "Managed by"), h("strong", null, user.name))
+        )
+      : null
   );
 }
 
@@ -849,16 +1043,24 @@ function AssignmentSlip({ assignment, helpers }) {
   );
 }
 
-function AssignmentCard({ assignment, helpers }) {
+function AssignmentCard({ assignment, helpers, canManage = false, course = null }) {
   return h(
     "article",
-    { className: `assignment-card ${assignment.realStatus}`, style: { "--accent": assignment.courseColor } },
+    { className: `assignment-card ${assignment.realStatus} ${assignment.published ? "" : "unpublished"}`, style: { "--accent": assignment.courseColor } },
     h("div", { className: "card-pin" }),
-    h("div", { className: "assignment-top" }, h("span", null, assignment.courseName), h("strong", null, dueLabel(assignment.due))),
+    h("div", { className: "assignment-top" }, h("span", null, assignment.courseName), h("strong", null, assignment.published ? dueLabel(assignment.due) : "Unpublished")),
     h("h2", null, assignment.title),
-    h("p", null, `${assignment.group} - ${assignment.points} pts - grade impact ${assignment.impact}%`),
+    h("p", null, `${assignment.group} - ${assignment.points} pts - ${assignment.type}${assignment.description ? ` - ${assignment.description}` : ""}`),
     h("div", { className: "completion-mark" }, h("span", null, assignment.realStatus === "complete" ? "Stamped complete" : assignment.realStatus === "missing" ? "Missing" : "In progress")),
-    h("button", { onClick: () => helpers.toggleComplete(assignment.id) }, assignment.realStatus === "complete" ? "Undo complete" : "Mark completed")
+    h("button", { onClick: () => helpers.toggleComplete(assignment.id) }, assignment.realStatus === "complete" ? "Undo complete" : "Mark completed"),
+    canManage
+      ? h(
+          "div",
+          { className: "announcement-actions" },
+          h("button", { onClick: () => helpers.startAssignmentEdit(assignment) }, "Edit"),
+          h("button", { onClick: () => helpers.deleteAssignment(course.id, assignment.id) }, "Delete")
+        )
+      : null
   );
 }
 
@@ -1004,13 +1206,17 @@ function sortByUrgency(a, b) {
 }
 
 function enrichCourseAssignments(course, helpers) {
-  return course.assignments.map((assignment) => ({
-    ...assignment,
-    courseId: course.id,
-    courseName: course.name,
-    courseColor: course.color,
-    realStatus: helpers.assignmentStatus(assignment),
-  }));
+  return helpers.getCourseAssignments(course);
+}
+
+function sampleRoster(course) {
+  if (course.id !== "bio") return course.people;
+  return [
+    { name: "Avery Reed", role: "Student", email: "avery.reed@northlake.edu", grade: 87, missing: 1, progress: 68 },
+    { name: "Jordan Ellis", role: "Student", email: "jellis@northlake.edu", grade: 91, missing: 0, progress: 76 },
+    { name: "Camila Ortiz", role: "Student", email: "cortiz@northlake.edu", grade: 82, missing: 2, progress: 59 },
+    { name: "Maya Chen", role: "Teaching Assistant", email: "mchen-ta@northlake.edu", grade: 100, missing: 0, progress: 100 },
+  ];
 }
 
 function sortGradeRows(assignments, sort) {
@@ -1035,12 +1241,13 @@ function countReplies(replies) {
 }
 
 function completionRatio(course, helpers) {
-  const complete = course.assignments.filter((assignment) => helpers.assignmentStatus(assignment) === "complete").length;
-  return Math.round((complete / course.assignments.length) * 100);
+  const assignments = helpers.getCourseAssignments(course);
+  const complete = assignments.filter((assignment) => helpers.assignmentStatus(assignment) === "complete").length;
+  return Math.round((complete / Math.max(assignments.length, 1)) * 100);
 }
 
 function riskLabel(course, state, helpers) {
-  const missing = course.assignments.filter((assignment) => helpers.assignmentStatus(assignment) === "missing").length;
+  const missing = helpers.getCourseAssignments(course).filter((assignment) => helpers.assignmentStatus(assignment) === "missing").length;
   const target = state?.targets?.[course.id] || course.target;
   if (course.grade < 80 || missing > 0) return "Needs attention";
   if (course.grade < target) return "Close watch";
