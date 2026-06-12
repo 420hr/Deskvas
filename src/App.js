@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-12";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-13";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
+const courseNavItems = ["Home", "Syllabus", "Modules", "Announcements", "Discussions", "Assignments", "People"];
 const testProfile = {
   name: "Avery Reed",
   initials: "AR",
@@ -19,6 +20,7 @@ function createInitialState() {
     loggedIn: saved.loggedIn ?? true,
     section: saved.section || "Dashboard",
     selectedCourse: saved.selectedCourse || "bio",
+    courseTab: saved.courseTab || "Home",
     theme: saved.theme || "light",
     profileMenuOpen: false,
     gradeSort: saved.gradeSort || "due",
@@ -79,7 +81,8 @@ function createHelpers(state, setState) {
     assignmentStatus,
     setSection: (section) => update({ section }),
     setCourse: (selectedCourse) => update({ selectedCourse }),
-    openCourse: (selectedCourse) => update({ selectedCourse, section: "Course" }),
+    openCourse: (selectedCourse) => update({ selectedCourse, section: "Course", courseTab: "Home" }),
+    setCourseTab: (courseTab) => update({ courseTab }),
     openGrades: (selectedCourse) => update({ selectedCourse, section: "Grades" }),
     setGradeSort: (gradeSort) => update({ gradeSort }),
     setInboxFilter: (inboxFilter) => update({ inboxFilter }),
@@ -430,14 +433,77 @@ function CourseDetailView({ course, state, helpers }) {
     ),
     h(
       "div",
-      { className: "detail-grid" },
-      h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Modules"), h("span", null, `${course.modules.length} groups`)), course.modules.map((module) => h(ModuleCard, { key: module.id, module }))),
-      h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Active Work"), h("span", null, `${active.length} items`)), active.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers }))),
-      h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Recent Activity"), h("span", null, course.name)), course.activity.map((event) => h(ActivityItem, { key: event.id, event: { ...event, courseName: course.name, courseColor: course.color } }))),
-      h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Files & Resources"), h("span", null, `${course.resources.length} files`)), course.resources.map((resource) => h(ResourceRow, { key: resource.id, resource, course }))),
-      h("div", { className: "paper-panel wide-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Grade Details"), h("button", { onClick: () => helpers.openGrades(course.id) }, "Open full gradebook")), assignments.map((assignment) => h(GradeRow, { key: assignment.id, assignment })))
+      { className: "course-workspace", style: { "--accent": course.color } },
+      h(
+        "aside",
+        { className: "course-nav", "aria-label": `${course.name} course navigation` },
+        courseNavItems.map((item) =>
+          h(
+            "button",
+            {
+              key: item,
+              className: state.courseTab === item ? "active" : "",
+              onClick: () => helpers.setCourseTab(item),
+            },
+            item
+          )
+        )
+      ),
+      h(CourseTabContent, { course, state, helpers, assignments, active })
     )
   );
+}
+
+function CourseTabContent({ course, state, helpers, assignments, active }) {
+  if (state.courseTab === "Syllabus") return h(CourseSyllabusTab, { course });
+  if (state.courseTab === "Modules") return h(CourseModulesTab, { course });
+  if (state.courseTab === "Announcements") return h(CourseAnnouncementsTab, { course });
+  if (state.courseTab === "Discussions") return h(CourseDiscussionsTab, { course });
+  if (state.courseTab === "Assignments") return h(CourseAssignmentsTab, { assignments, helpers });
+  if (state.courseTab === "People") return h(CoursePeopleTab, { course });
+  return h(CourseHomeTab, { course, helpers, assignments, active });
+}
+
+function CourseHomeTab({ course, helpers, assignments, active }) {
+  return h(
+    "div",
+    { className: "detail-grid course-tab-panel" },
+    h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Overview"), h("span", null, course.name)), h("p", null, course.syllabus.description), h("div", { className: "mini-meter" }, h(GradeGauge, { grade: course.grade, color: course.color }))),
+    h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Active Work"), h("span", null, `${active.length} items`)), active.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers }))),
+    h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Recent Activity"), h("span", null, course.name)), course.activity.map((event) => h(ActivityItem, { key: event.id, event: { ...event, courseName: course.name, courseColor: course.color } }))),
+    h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Upcoming"), h("span", null, `${assignments.length} total`)), assignments.filter((assignment) => assignment.realStatus !== "complete").slice(0, 3).map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })))
+  );
+}
+
+function CourseSyllabusTab({ course }) {
+  return h(
+    "div",
+    { className: "detail-grid course-tab-panel" },
+    h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Syllabus"), h("span", null, course.name)), h("p", null, course.syllabus.description), h("div", { className: "syllabus-facts" }, h("div", null, h("span", null, "Instructor"), h("strong", null, course.instructor)), h("div", null, h("span", null, "Location"), h("strong", null, course.room)))),
+    h("div", { className: "paper-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Important Dates"), h("span", null, "Term")), h("ul", { className: "course-list" }, course.syllabus.importantDates.map((date) => h("li", { key: date }, date)))),
+    h("div", { className: "paper-panel wide-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Grading Weights"), h("span", null, "Policy")), course.weights.map((group) => h("div", { key: group.label, className: "weight-row" }, h("span", null, group.label), h("div", { className: "rail" }, h("i", { style: { width: `${group.weight}%` } })), h("strong", null, `${group.weight}%`))))
+  );
+}
+
+function CourseModulesTab({ course }) {
+  return h("div", { className: "paper-panel course-tab-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Modules"), h("span", null, `${course.modules.length} groups`)), course.modules.map((module) => h(ModuleCard, { key: module.id, module })));
+}
+
+function CourseAnnouncementsTab({ course }) {
+  const announcements = course.activity.filter((event) => ["Announcement", "Assignment", "Reminder"].includes(event.type));
+  return h("div", { className: "paper-panel course-tab-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Announcements"), h("span", null, course.name)), announcements.length ? announcements.map((event) => h(ActivityItem, { key: event.id, event: { ...event, courseName: course.name, courseColor: course.color } })) : h("p", { className: "empty" }, "No announcements yet."));
+}
+
+function CourseDiscussionsTab({ course }) {
+  return h("div", { className: "discussion-board course-tab-panel" }, course.discussions.map((topic) => h("article", { key: topic.id, className: "discussion-card" }, h("span", null, course.name), h("h2", null, topic.title), h("p", null, `${topic.replies} replies - ${topic.unread} unread`))));
+}
+
+function CourseAssignmentsTab({ assignments, helpers }) {
+  return h("div", { className: "assignment-board course-tab-panel" }, assignments.map((assignment) => h(AssignmentCard, { key: assignment.id, assignment, helpers })));
+}
+
+function CoursePeopleTab({ course }) {
+  return h("div", { className: "people-board course-tab-panel" }, course.people.map((person) => h("article", { key: person.email, className: "person-card" }, h("span", { className: "avatar" }, initialsFor(person.name)), h("div", null, h("h2", null, person.name), h("p", null, person.role), h("small", null, person.email)))));
 }
 
 function SettingsView({ state, helpers }) {
@@ -667,6 +733,15 @@ function sortGradeRows(assignments, sort) {
   if (sort === "module") return rows.sort((a, b) => a.module.localeCompare(b.module) || a.title.localeCompare(b.title));
   if (sort === "group") return rows.sort((a, b) => a.group.localeCompare(b.group) || a.title.localeCompare(b.title));
   return rows.sort(sortByDue);
+}
+
+function initialsFor(name) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 function completionRatio(course, helpers) {

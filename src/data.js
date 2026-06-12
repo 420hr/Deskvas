@@ -14,6 +14,10 @@ export const courses = [
       { label: "Homework", weight: 20, earned: 94 },
       { label: "Participation", weight: 10, earned: 91 },
     ],
+    syllabus: {
+      description: "A lab-focused tour of the major human body systems with practical anatomy review.",
+      importantDates: ["Muscle practical: Jun 10", "Nervous system quiz: Jun 8", "Lab portfolio due: Jun 14"],
+    },
     assignments: [
       { id: "bio-a1", title: "Muscle Tissue Lab Report", due: "2026-06-05", module: "Muscular System", group: "Labs", type: "Assignment", points: 40, score: null, status: "upcoming", impact: 2.9, submitted: false, comments: true, rubric: true },
       { id: "bio-a2", title: "Nervous System Quiz", due: "2026-06-08", module: "Nervous System", group: "Exams", type: "Quiz", points: 25, score: null, status: "upcoming", impact: 3.5, submitted: false, comments: false, rubric: false },
@@ -34,6 +38,15 @@ export const courses = [
       { id: "bio-r1", title: "Muscle Tissue Slides", type: "PDF", updated: "2026-06-01" },
       { id: "bio-r2", title: "Lab Practical Checklist", type: "DOC", updated: "2026-05-29" },
     ],
+    discussions: [
+      { id: "bio-d1", title: "Neuron Diagram Questions", replies: 8, unread: 2 },
+      { id: "bio-d2", title: "Lab Practical Study Tips", replies: 14, unread: 0 },
+    ],
+    people: [
+      { name: "Dr. Elena Rivera", role: "Instructor", email: "erivera@northlake.edu" },
+      { name: "Maya Chen", role: "Teaching Assistant", email: "mchen-ta@northlake.edu" },
+      { name: "Jordan Ellis", role: "Classmate", email: "jellis@northlake.edu" },
+    ],
   },
   {
     id: "eng",
@@ -50,6 +63,10 @@ export const courses = [
       { label: "Reading Notes", weight: 20, earned: 95 },
       { label: "Participation", weight: 10, earned: 93 },
     ],
+    syllabus: {
+      description: "A studio course on writing, editing, and publishing for digital audiences.",
+      importantDates: ["Revision memo due: Jun 4", "Workshop packet due: Jun 7", "Final portfolio due: Jun 15"],
+    },
     assignments: [
       { id: "eng-a1", title: "Editorial Revision Memo", due: "2026-06-04", module: "Revision Studio", group: "Essays", type: "Assignment", points: 50, score: null, status: "upcoming", impact: 2.2, submitted: false, comments: true, rubric: true },
       { id: "eng-a2", title: "Peer Workshop Packet", due: "2026-06-07", module: "Revision Studio", group: "Workshops", type: "Discussion", points: 20, score: null, status: "upcoming", impact: 1.1, submitted: false, comments: false, rubric: true },
@@ -67,6 +84,15 @@ export const courses = [
       { id: "eng-r1", title: "Revision Rubric", type: "PDF", updated: "2026-06-02" },
       { id: "eng-r2", title: "Digital Style Guide", type: "LINK", updated: "2026-05-28" },
     ],
+    discussions: [
+      { id: "eng-d1", title: "Favorite Editorial Openings", replies: 11, unread: 3 },
+      { id: "eng-d2", title: "Workshop Partner Questions", replies: 6, unread: 1 },
+    ],
+    people: [
+      { name: "Prof. Nisha Shah", role: "Instructor", email: "nshah@northlake.edu" },
+      { name: "Leo Martin", role: "Writing Fellow", email: "lmartin@northlake.edu" },
+      { name: "Sam Patel", role: "Classmate", email: "spatel@northlake.edu" },
+    ],
   },
   {
     id: "calc",
@@ -83,6 +109,10 @@ export const courses = [
       { label: "Midterms", weight: 35, earned: 74 },
       { label: "Final", weight: 20, earned: 0, remaining: true },
     ],
+    syllabus: {
+      description: "A second-semester calculus course covering integration, series, and parametric equations.",
+      importantDates: ["Series set due: Jun 3", "Integration quiz: Jun 6", "Final exam: Jun 18"],
+    },
     assignments: [
       { id: "calc-a1", title: "Series Convergence Set", due: "2026-06-03", module: "Infinite Series", group: "Problem Sets", type: "Assignment", points: 30, score: null, status: "upcoming", impact: 2.4, submitted: false, comments: false, rubric: false },
       { id: "calc-a2", title: "Integration Techniques Quiz", due: "2026-06-06", module: "Advanced Integration", group: "Quizzes", type: "Quiz", points: 20, score: null, status: "upcoming", impact: 2.8, submitted: false, comments: false, rubric: false },
@@ -101,6 +131,15 @@ export const courses = [
       { id: "calc-r1", title: "Series Test Flowchart", type: "PDF", updated: "2026-06-02" },
       { id: "calc-r2", title: "Integration Formula Sheet", type: "PDF", updated: "2026-05-26" },
     ],
+    discussions: [
+      { id: "calc-d1", title: "Ratio Test Examples", replies: 9, unread: 4 },
+      { id: "calc-d2", title: "Quiz Review Thread", replies: 17, unread: 5 },
+    ],
+    people: [
+      { name: "Dr. Marcus Coleman", role: "Instructor", email: "mcoleman@northlake.edu" },
+      { name: "Priya Rao", role: "Teaching Assistant", email: "prao-ta@northlake.edu" },
+      { name: "Alex Nguyen", role: "Classmate", email: "anguyen@northlake.edu" },
+    ],
   },
   {
     id: "hist",
@@ -117,6 +156,10 @@ export const courses = [
       { label: "Discussion", weight: 20, earned: 96 },
       { label: "Reading Checks", weight: 15, earned: 88 },
     ],
+    syllabus: {
+      description: "A modern history survey centered on global conflict, recovery, and social change.",
+      importantDates: ["Reading check: Jun 2", "Cold War reflection: Jun 4", "Exam review: Jun 12"],
+    },
     assignments: [
       { id: "hist-a1", title: "Cold War Source Reflection", due: "2026-06-04", module: "Cold War Worlds", group: "Papers", type: "Assignment", points: 35, score: null, status: "upcoming", impact: 1.7, submitted: false, comments: true, rubric: true },
       { id: "hist-a2", title: "Reading Check 9", due: "2026-06-02", module: "Cold War Worlds", group: "Reading Checks", type: "Quiz", points: 10, score: null, status: "upcoming", impact: 0.9, submitted: false, comments: false, rubric: false },
@@ -133,6 +176,15 @@ export const courses = [
     resources: [
       { id: "hist-r1", title: "Cold War Primary Sources", type: "PDF", updated: "2026-06-02" },
       { id: "hist-r2", title: "Exam 3 Review Slides", type: "SLIDES", updated: "2026-05-30" },
+    ],
+    discussions: [
+      { id: "hist-d1", title: "Cold War Source Interpretations", replies: 13, unread: 2 },
+      { id: "hist-d2", title: "Postwar Recovery Debate", replies: 7, unread: 0 },
+    ],
+    people: [
+      { name: "Prof. Helen Bennett", role: "Instructor", email: "hbennett@northlake.edu" },
+      { name: "Ari Brooks", role: "Discussion Leader", email: "abrooks@northlake.edu" },
+      { name: "Taylor Morgan", role: "Classmate", email: "tmorgan@northlake.edu" },
     ],
   },
 ];
