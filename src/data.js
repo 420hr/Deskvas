@@ -39,8 +39,26 @@ export const courses = [
       { id: "bio-r2", title: "Lab Practical Checklist", type: "DOC", updated: "2026-05-29" },
     ],
     discussions: [
-      { id: "bio-d1", title: "Neuron Diagram Questions", replies: 8, unread: 2 },
-      { id: "bio-d2", title: "Lab Practical Study Tips", replies: 14, unread: 0 },
+      {
+        id: "bio-d1",
+        title: "Neuron Diagram Questions",
+        prompt: "Post one labeled neuron diagram question before lab. Reply to a classmate with a correction, study cue, or memory trick.",
+        unread: 2,
+        replies: [
+          { id: "bio-d1-r1", author: "Maya Chen", role: "Teaching Assistant", date: "2026-06-02", body: "A good check is whether the signal direction goes dendrites, cell body, axon, then terminals.", children: [{ id: "bio-d1-r1-c1", author: "Jordan Ellis", role: "Classmate", date: "2026-06-02", body: "That helps. I kept putting myelin before the axon label instead of on the axon itself.", children: [] }] },
+          { id: "bio-d1-r2", author: "Dr. Elena Rivera", role: "Instructor", date: "2026-06-01", body: "Remember to include nodes of Ranvier if your diagram shows myelination.", children: [] },
+        ],
+      },
+      {
+        id: "bio-d2",
+        title: "Lab Practical Study Tips",
+        prompt: "Share one practical study routine that helped you connect structures to function.",
+        unread: 0,
+        replies: [
+          { id: "bio-d2-r1", author: "Jordan Ellis", role: "Classmate", date: "2026-06-01", body: "I made flash cards with a sketch on one side and a function clue on the other.", children: [] },
+          { id: "bio-d2-r2", author: "Maya Chen", role: "Teaching Assistant", date: "2026-05-31", body: "Study in short rounds. Identify, explain, cover, then identify again from memory.", children: [] },
+        ],
+      },
     ],
     people: [
       { name: "Dr. Elena Rivera", role: "Instructor", email: "erivera@northlake.edu" },
@@ -85,8 +103,26 @@ export const courses = [
       { id: "eng-r2", title: "Digital Style Guide", type: "LINK", updated: "2026-05-28" },
     ],
     discussions: [
-      { id: "eng-d1", title: "Favorite Editorial Openings", replies: 11, unread: 3 },
-      { id: "eng-d2", title: "Workshop Partner Questions", replies: 6, unread: 1 },
+      {
+        id: "eng-d1",
+        title: "Favorite Editorial Openings",
+        prompt: "Paste or describe an editorial opening that pulled you in. What move does the writer make in the first paragraph?",
+        unread: 3,
+        replies: [
+          { id: "eng-d1-r1", author: "Leo Martin", role: "Writing Fellow", date: "2026-06-02", body: "I like openings that start with a small scene, then widen into the argument.", children: [] },
+          { id: "eng-d1-r2", author: "Sam Patel", role: "Classmate", date: "2026-06-01", body: "The best one I found starts with a contradiction instead of a question.", children: [{ id: "eng-d1-r2-c1", author: "Prof. Nisha Shah", role: "Instructor", date: "2026-06-01", body: "Good observation. Contradiction can create tension without sounding gimmicky.", children: [] }] },
+        ],
+      },
+      {
+        id: "eng-d2",
+        title: "Workshop Partner Questions",
+        prompt: "Before workshop, leave two questions you want your partner to answer about your draft.",
+        unread: 1,
+        replies: [
+          { id: "eng-d2-r1", author: "Sam Patel", role: "Classmate", date: "2026-06-02", body: "Can you tell where my audience shifts from students to administrators?", children: [] },
+          { id: "eng-d2-r2", author: "Leo Martin", role: "Writing Fellow", date: "2026-06-02", body: "Ask one global question and one sentence-level question so the feedback is balanced.", children: [] },
+        ],
+      },
     ],
     people: [
       { name: "Prof. Nisha Shah", role: "Instructor", email: "nshah@northlake.edu" },
@@ -132,8 +168,26 @@ export const courses = [
       { id: "calc-r2", title: "Integration Formula Sheet", type: "PDF", updated: "2026-05-26" },
     ],
     discussions: [
-      { id: "calc-d1", title: "Ratio Test Examples", replies: 9, unread: 4 },
-      { id: "calc-d2", title: "Quiz Review Thread", replies: 17, unread: 5 },
+      {
+        id: "calc-d1",
+        title: "Ratio Test Examples",
+        prompt: "Share one series where the ratio test is useful. Explain what limit you get and what conclusion it supports.",
+        unread: 4,
+        replies: [
+          { id: "calc-d1-r1", author: "Priya Rao", role: "Teaching Assistant", date: "2026-06-02", body: "Factorials are usually a strong sign that ratio test will simplify the expression.", children: [] },
+          { id: "calc-d1-r2", author: "Alex Nguyen", role: "Classmate", date: "2026-06-01", body: "For n!/5^n I got a limit that grows without bound, so it diverges.", children: [{ id: "calc-d1-r2-c1", author: "Dr. Marcus Coleman", role: "Instructor", date: "2026-06-01", body: "Correct conclusion. Be explicit that the ratio limit is greater than 1.", children: [] }] },
+        ],
+      },
+      {
+        id: "calc-d2",
+        title: "Quiz Review Thread",
+        prompt: "Post one integration technique question and reply to one classmate with the first step you would try.",
+        unread: 5,
+        replies: [
+          { id: "calc-d2-r1", author: "Alex Nguyen", role: "Classmate", date: "2026-06-02", body: "How do you choose between substitution and integration by parts?", children: [] },
+          { id: "calc-d2-r2", author: "Priya Rao", role: "Teaching Assistant", date: "2026-06-02", body: "Look for a composition first. If there is no clear inside function, then parts may be better.", children: [] },
+        ],
+      },
     ],
     people: [
       { name: "Dr. Marcus Coleman", role: "Instructor", email: "mcoleman@northlake.edu" },
@@ -178,8 +232,26 @@ export const courses = [
       { id: "hist-r2", title: "Exam 3 Review Slides", type: "SLIDES", updated: "2026-05-30" },
     ],
     discussions: [
-      { id: "hist-d1", title: "Cold War Source Interpretations", replies: 13, unread: 2 },
-      { id: "hist-d2", title: "Postwar Recovery Debate", replies: 7, unread: 0 },
+      {
+        id: "hist-d1",
+        title: "Cold War Source Interpretations",
+        prompt: "Choose one primary source from the packet. What does it reveal about fear, power, or everyday life during the Cold War?",
+        unread: 2,
+        replies: [
+          { id: "hist-d1-r1", author: "Ari Brooks", role: "Discussion Leader", date: "2026-06-02", body: "Try to quote one specific phrase from the source before moving to interpretation.", children: [] },
+          { id: "hist-d1-r2", author: "Taylor Morgan", role: "Classmate", date: "2026-06-01", body: "The civil defense pamphlet makes fear feel very routine, almost like household planning.", children: [{ id: "hist-d1-r2-c1", author: "Prof. Helen Bennett", role: "Instructor", date: "2026-06-01", body: "That is a sharp reading. Notice how ordinary language can normalize political anxiety.", children: [] }] },
+        ],
+      },
+      {
+        id: "hist-d2",
+        title: "Postwar Recovery Debate",
+        prompt: "Was postwar recovery driven more by government planning, international aid, or local rebuilding? Defend one position.",
+        unread: 0,
+        replies: [
+          { id: "hist-d2-r1", author: "Taylor Morgan", role: "Classmate", date: "2026-05-31", body: "I would argue international aid mattered most because it shaped what local rebuilding could afford.", children: [] },
+          { id: "hist-d2-r2", author: "Ari Brooks", role: "Discussion Leader", date: "2026-05-31", body: "Strong posts should connect one local example to one larger policy decision.", children: [] },
+        ],
+      },
     ],
     people: [
       { name: "Prof. Helen Bennett", role: "Instructor", email: "hbennett@northlake.edu" },

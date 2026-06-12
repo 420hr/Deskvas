@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-13";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-14";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
@@ -27,6 +27,10 @@ function createInitialState() {
     inboxFilter: saved.inboxFilter || "all",
     targets: saved.targets || Object.fromEntries(courses.map((course) => [course.id, course.target])),
     completed: saved.completed || {},
+    selectedDiscussion: saved.selectedDiscussion || null,
+    readDiscussions: saved.readDiscussions || {},
+    discussionDrafts: saved.discussionDrafts || {},
+    discussionReplies: saved.discussionReplies || {},
   };
 }
 
@@ -81,8 +85,42 @@ function createHelpers(state, setState) {
     assignmentStatus,
     setSection: (section) => update({ section }),
     setCourse: (selectedCourse) => update({ selectedCourse }),
-    openCourse: (selectedCourse) => update({ selectedCourse, section: "Course", courseTab: "Home" }),
-    setCourseTab: (courseTab) => update({ courseTab }),
+    openCourse: (selectedCourse) => update({ selectedCourse, section: "Course", courseTab: "Home", selectedDiscussion: null }),
+    setCourseTab: (courseTab) => update({ courseTab, selectedDiscussion: courseTab === "Discussions" ? state.selectedDiscussion : null }),
+    openDiscussion: (discussionId) =>
+      setState((current) => ({
+        ...current,
+        selectedDiscussion: discussionId,
+        readDiscussions: { ...current.readDiscussions, [discussionId]: true },
+      })),
+    closeDiscussion: () => update({ selectedDiscussion: null }),
+    setDiscussionDraft: (discussionId, value) =>
+      setState((current) => ({
+        ...current,
+        discussionDrafts: { ...current.discussionDrafts, [discussionId]: value },
+      })),
+    addDiscussionReply: (discussionId) =>
+      setState((current) => {
+        const body = (current.discussionDrafts[discussionId] || "").trim();
+        if (!body) return current;
+        const reply = {
+          id: `${discussionId}-avery-${Date.now()}`,
+          author: testProfile.name,
+          role: "Student",
+          date: new Date().toISOString().slice(0, 10),
+          body,
+          children: [],
+        };
+        return {
+          ...current,
+          discussionDrafts: { ...current.discussionDrafts, [discussionId]: "" },
+          discussionReplies: {
+            ...current.discussionReplies,
+            [discussionId]: [...(current.discussionReplies[discussionId] || []), reply],
+          },
+          readDiscussions: { ...current.readDiscussions, [discussionId]: true },
+        };
+      }),
     openGrades: (selectedCourse) => update({ selectedCourse, section: "Grades" }),
     setGradeSort: (gradeSort) => update({ gradeSort }),
     setInboxFilter: (inboxFilter) => update({ inboxFilter }),
@@ -458,7 +496,7 @@ function CourseTabContent({ course, state, helpers, assignments, active }) {
   if (state.courseTab === "Syllabus") return h(CourseSyllabusTab, { course });
   if (state.courseTab === "Modules") return h(CourseModulesTab, { course });
   if (state.courseTab === "Announcements") return h(CourseAnnouncementsTab, { course });
-  if (state.courseTab === "Discussions") return h(CourseDiscussionsTab, { course });
+  if (state.courseTab === "Discussions") return h(CourseDiscussionsTab, { course, state, helpers });
   if (state.courseTab === "Assignments") return h(CourseAssignmentsTab, { assignments, helpers });
   if (state.courseTab === "People") return h(CoursePeopleTab, { course });
   return h(CourseHomeTab, { course, helpers, assignments, active });
@@ -494,8 +532,80 @@ function CourseAnnouncementsTab({ course }) {
   return h("div", { className: "paper-panel course-tab-panel" }, h("div", { className: "panel-head" }, h("h2", null, "Announcements"), h("span", null, course.name)), announcements.length ? announcements.map((event) => h(ActivityItem, { key: event.id, event: { ...event, courseName: course.name, courseColor: course.color } })) : h("p", { className: "empty" }, "No announcements yet."));
 }
 
-function CourseDiscussionsTab({ course }) {
-  return h("div", { className: "discussion-board course-tab-panel" }, course.discussions.map((topic) => h("article", { key: topic.id, className: "discussion-card" }, h("span", null, course.name), h("h2", null, topic.title), h("p", null, `${topic.replies} replies - ${topic.unread} unread`))));
+function CourseDiscussionsTab({ course, state, helpers }) {
+  const selected = course.discussions.find((topic) => topic.id === state.selectedDiscussion);
+  if (selected) return h(DiscussionDetail, { course, discussion: selected, state, helpers });
+
+  return h(
+    "div",
+    { className: "discussion-board course-tab-panel" },
+    course.discussions.map((topic) => {
+      const extraReplies = state.discussionReplies[topic.id] || [];
+      const replyCount = countReplies(topic.replies) + extraReplies.length;
+      const unread = state.readDiscussions[topic.id] ? 0 : topic.unread;
+      return h(
+        "article",
+        { key: topic.id, className: `discussion-card ${unread ? "unread" : ""}` },
+        h("span", null, course.name),
+        h("h2", null, topic.title),
+        h("p", null, topic.prompt),
+        h("div", { className: "discussion-meta" }, h("strong", null, `${replyCount} replies`), h("em", null, unread ? `${unread} unread` : "All read")),
+        h("button", { onClick: () => helpers.openDiscussion(topic.id) }, "Open discussion")
+      );
+    })
+  );
+}
+
+function DiscussionDetail({ course, discussion, state, helpers }) {
+  const extraReplies = state.discussionReplies[discussion.id] || [];
+  const replies = [...discussion.replies, ...extraReplies];
+  const draft = state.discussionDrafts[discussion.id] || "";
+  return h(
+    "div",
+    { className: "discussion-detail course-tab-panel" },
+    h(
+      "section",
+      { className: "discussion-prompt paper-panel" },
+      h("button", { className: "ghost-button", onClick: helpers.closeDiscussion }, "Back to discussions"),
+      h("span", { className: "eyebrow" }, course.name),
+      h("h2", null, discussion.title),
+      h("p", null, discussion.prompt),
+      h("div", { className: "discussion-meta" }, h("strong", null, `${countReplies(replies)} replies`), h("em", null, "Marked read"))
+    ),
+    h(
+      "section",
+      { className: "reply-thread" },
+      replies.map((reply) => h(ReplyCard, { key: reply.id, reply }))
+    ),
+    h(
+      "form",
+      {
+        className: "reply-composer paper-panel",
+        onSubmit: (event) => {
+          event.preventDefault();
+          helpers.addDiscussionReply(discussion.id);
+        },
+      },
+      h("label", null, "Add your reply"),
+      h("textarea", {
+        value: draft,
+        placeholder: "Share a question, source, or study note with the class...",
+        onChange: (event) => helpers.setDiscussionDraft(discussion.id, event.target.value),
+      }),
+      h("button", { className: "primary", disabled: !draft.trim() }, "Post reply")
+    )
+  );
+}
+
+function ReplyCard({ reply }) {
+  return h(
+    "article",
+    { className: "reply-card" },
+    h("div", { className: "reply-pin" }),
+    h("div", { className: "reply-head" }, h("span", { className: "avatar" }, initialsFor(reply.author)), h("div", null, h("strong", null, reply.author), h("small", null, `${reply.role} - ${formatDate(reply.date)}`))),
+    h("p", null, reply.body),
+    reply.children?.length ? h("div", { className: "reply-children" }, reply.children.map((child) => h(ReplyCard, { key: child.id, reply: child }))) : null
+  );
 }
 
 function CourseAssignmentsTab({ assignments, helpers }) {
@@ -742,6 +852,10 @@ function initialsFor(name) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+function countReplies(replies) {
+  return replies.reduce((sum, reply) => sum + 1 + countReplies(reply.children || []), 0);
 }
 
 function completionRatio(course, helpers) {

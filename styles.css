@@ -1342,7 +1342,8 @@ input[type="range"] {
 .grade-row,
 .message-card,
 .discussion-card,
-.person-card {
+.person-card,
+.reply-card {
   border: 1px solid var(--line);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent),
@@ -1368,7 +1369,8 @@ input[type="range"] {
 .course-list,
 .discussion-card span,
 .person-card p,
-.person-card small {
+.person-card small,
+.reply-card small {
   color: var(--muted);
 }
 
@@ -1396,10 +1398,137 @@ input[type="range"] {
   border-radius: 0.45rem;
 }
 
+.discussion-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.discussion-card.unread::after {
+  content: "";
+  position: absolute;
+  right: 0.8rem;
+  top: 0.8rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: var(--accent, #5c7f81);
+  box-shadow: 0 0 0.7rem color-mix(in srgb, var(--accent, #5c7f81) 60%, transparent);
+}
+
 .discussion-card h2,
 .person-card h2 {
   margin: 0.35rem 0;
   font-size: 1.15rem;
+}
+
+.discussion-card p {
+  color: var(--muted);
+}
+
+.discussion-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+  margin: 0.8rem 0;
+}
+
+.discussion-meta strong,
+.discussion-meta em {
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent, #5c7f81) 16%, var(--panel));
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-style: normal;
+}
+
+.discussion-detail {
+  display: grid;
+  gap: 1rem;
+}
+
+.discussion-prompt {
+  position: relative;
+  border-top: 0.32rem solid var(--accent, #5c7f81);
+}
+
+.ghost-button {
+  margin-bottom: 1rem;
+  background: color-mix(in srgb, var(--button) 60%, transparent);
+}
+
+.reply-thread {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.reply-card {
+  position: relative;
+  padding: 1rem 1rem 1rem 1.15rem;
+  border-radius: 0.45rem;
+  transform: rotate(-0.25deg);
+}
+
+.reply-card:nth-child(even) {
+  transform: rotate(0.2deg);
+}
+
+.reply-pin {
+  position: absolute;
+  right: 0.9rem;
+  top: -0.35rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 30%, #fff9d5 0 16%, transparent 17%),
+    var(--accent, #5c7f81);
+  box-shadow: 0 0.18rem 0.38rem var(--shadow);
+}
+
+.reply-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.reply-head strong,
+.reply-head small {
+  display: block;
+}
+
+.reply-card p {
+  margin-bottom: 0;
+}
+
+.reply-children {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+  padding-left: 1.2rem;
+  border-left: 0.18rem solid color-mix(in srgb, var(--accent, #5c7f81) 35%, var(--line));
+}
+
+.reply-composer {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.reply-composer label {
+  font-weight: 700;
+}
+
+.reply-composer textarea {
+  min-height: 7rem;
+  resize: vertical;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: inset 0 0.12rem 0.22rem var(--inset);
+  font: inherit;
 }
 
 .person-card {
