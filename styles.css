@@ -369,8 +369,129 @@ h1 {
   gap: 1rem;
 }
 
+.dashboard-brief {
+  display: grid;
+  align-content: center;
+  min-height: 12rem;
+  background:
+    linear-gradient(90deg, rgba(206, 68, 68, 0.14) 0 3.1rem, transparent 3.15rem),
+    repeating-linear-gradient(0deg, transparent 0 1.55rem, rgba(77, 103, 174, 0.1) 1.6rem),
+    var(--paper);
+}
+
+.dashboard-brief h2 {
+  margin: 0.35rem 0;
+  font-size: clamp(1.5rem, 3vw, 2.35rem);
+}
+
+.dashboard-brief p {
+  max-width: 44rem;
+  color: var(--muted);
+}
+
 .activity-panel {
   grid-column: 1 / -1;
+}
+
+.grade-shelf {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.grade-tile,
+.risk-slip,
+.target-row {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent),
+    var(--paper);
+  box-shadow: inset 0 0.08rem 0.16rem var(--inset), 0 0.55rem 1rem var(--shadow);
+  color: var(--ink);
+  text-align: left;
+}
+
+.grade-tile {
+  min-height: 9.4rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.grade-tile span,
+.grade-tile small {
+  color: var(--muted);
+}
+
+.grade-tile strong {
+  display: block;
+  margin: 0.45rem 0;
+  font-size: 1.75rem;
+}
+
+.mini-grade-bar {
+  height: 0.8rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+  box-shadow: inset 0 0.12rem 0.2rem var(--inset);
+}
+
+.mini-grade-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 65%, #fff8e8), var(--accent));
+}
+
+.risk-board,
+.weekly-planner,
+.missing-tray,
+.target-board {
+  align-self: start;
+}
+
+.risk-slip {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  margin-top: 0.65rem;
+  padding: 0.7rem 0.8rem;
+  border-left: 0.35rem solid var(--accent);
+  border-radius: 0.45rem;
+}
+
+.risk-slip span,
+.target-row em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.planner-section + .planner-section {
+  margin-top: 1rem;
+}
+
+.planner-section h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+}
+
+.target-row {
+  display: grid;
+  grid-template-columns: 4.8rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border-left: 0.35rem solid var(--accent);
+  border-radius: 0.45rem;
+}
+
+.dashboard-folders {
+  margin-top: 0;
 }
 
 .hero-pad,

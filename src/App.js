@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-17";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-18";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
@@ -493,52 +493,93 @@ function ProfileView({ helpers }) {
 
 function DashboardView({ course, state, helpers }) {
   const assignments = helpers.getAssignments();
-  const missing = assignments.filter((assignment) => assignment.realStatus === "missing");
+  const missing = assignments.filter((assignment) => assignment.realStatus === "missing").sort((a, b) => b.impact - a.impact);
   const upcoming = assignments
     .filter((assignment) => assignment.realStatus !== "complete")
     .sort(sortByUrgency)
     .slice(0, 5);
-  const activity = courses.flatMap((item) => item.activity.map((event) => ({ ...event, courseName: item.name, courseColor: item.color }))).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
+  const todayItems = assignments.filter((assignment) => assignment.realStatus !== "complete" && assignment.due && daysUntil(assignment.due) === 0).sort(sortByUrgency);
+  const weekItems = assignments.filter((assignment) => assignment.realStatus !== "complete" && assignment.due && daysUntil(assignment.due) > 0 && daysUntil(assignment.due) <= 7).sort(sortByUrgency).slice(0, 6);
+  const activity = courses.flatMap((item) => item.activity.map((event) => ({ ...event, courseName: item.name, courseColor: item.color }))).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  const courseSummaries = courses.map((item) => {
+    const courseAssignments = helpers.getCourseAssignments(item);
+    const courseMissing = courseAssignments.filter((assignment) => assignment.realStatus === "missing");
+    const urgent = courseAssignments.filter((assignment) => assignment.realStatus !== "complete" && assignment.due && daysUntil(assignment.due) <= 3).length;
+    return { course: item, assignments: courseAssignments, missing: courseMissing, urgent, status: riskLabel(item, state, helpers) };
+  });
+  const riskCourses = courseSummaries.filter((item) => item.status !== "On track" || item.missing.length || item.urgent);
 
   return h(
     "section",
     { className: "dashboard-grid" },
     h(
       "div",
-      { className: "hero-pad" },
-      h("div", { className: "pad-lines" }),
-      h(
-        "div",
-        { className: "hero-copy" },
-        h("span", { className: "eyebrow" }, "React MVP"),
-        h("h2", null, "A Canvas-style student home base with grades, work, risk, and targets in one place."),
-        h("p", null, "Screen layout: left navigation, dashboard overview, course binders, liquid grade meters, assignment tray, upcoming calendar, and settings with theme control.")
+      { className: "paper-panel dashboard-brief" },
+      h("span", { className: "eyebrow" }, "Academic command center"),
+      h("h2", null, "All courses at a glance."),
+      h("p", null, "Grades, risks, deadlines, missing work, and feedback are balanced across the whole term desk.")
+    ),
+    h(
+      "div",
+      { className: "paper-panel risk-board" },
+      h("div", { className: "panel-head" }, h("h2", null, "Risk Summary"), h("span", null, `${riskCourses.length} signals`)),
+      riskCourses.length
+        ? riskCourses.slice(0, 4).map(({ course: item, missing: courseMissing, urgent, status }) =>
+            h(
+              "button",
+              { key: item.id, className: "risk-slip", style: { "--accent": item.color }, onClick: () => helpers.openCourse(item.id) },
+              h("strong", null, item.name),
+              h("span", null, `${status} - ${courseMissing.length} missing - ${urgent} urgent`)
+            )
+          )
+        : h("p", { className: "empty" }, "No urgent risk signals right now.")
+    ),
+    h(
+      "div",
+      { className: "grade-shelf" },
+      courseSummaries.map(({ course: item, assignments: courseAssignments, status }) =>
+        h(
+          "button",
+          { key: item.id, className: "grade-tile", style: { "--accent": item.color }, onClick: () => helpers.openCourse(item.id) },
+          h("span", null, item.name),
+          h("strong", null, `${item.grade.toFixed(1)}%`),
+          h("div", { className: "mini-grade-bar", "aria-label": `${item.name} grade ${item.grade.toFixed(1)} percent` }, h("i", { style: { width: `${Math.max(0, Math.min(100, item.grade))}%` } })),
+          h("small", null, `${status} - ${completionRatio(item, helpers)}% work complete - ${courseAssignments.length} items`)
+        )
       )
     ),
     h(
       "div",
-      { className: "meter-card" },
-      h(GradeGauge, { grade: course.grade, color: course.color }),
-      h("h3", null, `${course.name} grade`),
-      h("p", null, `${riskLabel(course, state, helpers)} toward ${state.targets[course.id]}%`)
-    ),
-    h("div", { className: "course-rack" }, courses.map((item) => h(CourseFolder, { key: item.id, course: item, state, helpers }))),
-    h(
-      "div",
-      { className: "paper-panel" },
-      h("div", { className: "panel-head" }, h("h2", null, "Due Soon"), h("span", null, `${upcoming.length} active`)),
-      upcoming.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers }))
+      { className: "paper-panel weekly-planner" },
+      h("div", { className: "panel-head" }, h("h2", null, "Today / Next 7 Days"), h("span", null, `${todayItems.length + weekItems.length} tasks`)),
+      h("div", { className: "planner-section" }, h("h3", null, "Today"), todayItems.length ? todayItems.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })) : h("p", { className: "empty" }, "Nothing due today.")),
+      h("div", { className: "planner-section" }, h("h3", null, "Next 7 Days"), weekItems.length ? weekItems.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })) : h("p", { className: "empty" }, "No upcoming due dates this week."))
     ),
     h(
       "div",
-      { className: "paper-panel warning" },
-      h("div", { className: "panel-head" }, h("h2", null, "Missing Work"), h("span", null, `${missing.length} items`)),
-      missing.length ? missing.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })) : h("p", { className: "empty" }, "No missing work. The desk is calm.")
+      { className: "paper-panel warning missing-tray" },
+      h("div", { className: "panel-head" }, h("h2", null, "Missing Work Tray"), h("span", null, `${missing.length} items`)),
+      missing.length ? missing.slice(0, 5).map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })) : h("p", { className: "empty" }, "No missing work. The desk is calm.")
     ),
+    h(
+      "div",
+      { className: "paper-panel target-board" },
+      h("div", { className: "panel-head" }, h("h2", null, "Target Snapshot"), h("span", null, "All courses")),
+      courseSummaries.map(({ course: item, status }) =>
+        h(
+          "button",
+          { key: item.id, className: "target-row", style: { "--accent": item.color }, onClick: () => helpers.openGrades(item.id) },
+          h("span", null, item.name),
+          h("strong", null, `${item.grade.toFixed(1)} / ${state.targets[item.id]}%`),
+          h("em", null, status)
+        )
+      )
+    ),
+    h("div", { className: "course-rack dashboard-folders" }, courses.map((item) => h(CourseFolder, { key: item.id, course: item, state, helpers }))),
     h(
       "div",
       { className: "paper-panel activity-panel" },
-      h("div", { className: "panel-head" }, h("h2", null, "Recent Activity"), h("span", null, "All courses")),
+      h("div", { className: "panel-head" }, h("h2", null, "Recent Feedback & Activity"), h("span", null, "All courses")),
       activity.map((event) => h(ActivityItem, { key: event.id, event }))
     )
   );
