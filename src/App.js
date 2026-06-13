@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-19";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-20";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
@@ -512,20 +512,6 @@ function DashboardView({ course, state, helpers }) {
   return h(
     "section",
     { className: "dashboard-grid" },
-    h(
-      "div",
-      { className: "grade-shelf" },
-      courseSummaries.map(({ course: item, assignments: courseAssignments, status }) =>
-        h(
-          "button",
-          { key: item.id, className: "grade-tile", style: { "--accent": item.color }, onClick: () => helpers.openCourse(item.id) },
-          h("span", null, item.name),
-          h("strong", null, `${item.grade.toFixed(1)}%`),
-          h("div", { className: "mini-grade-bar", "aria-label": `${item.name} grade ${item.grade.toFixed(1)} percent` }, h("i", { style: { width: `${Math.max(0, Math.min(100, item.grade))}%` } })),
-          h("small", null, `${status} - ${completionRatio(item, helpers)}% work complete - ${courseAssignments.length} items`)
-        )
-      )
-    ),
     h("div", { className: "course-rack dashboard-folders" }, courses.map((item) => h(CourseFolder, { key: item.id, course: item, state, helpers }))),
     h(
       "div",
