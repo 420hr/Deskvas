@@ -369,26 +369,6 @@ h1 {
   gap: 1rem;
 }
 
-.dashboard-brief {
-  display: grid;
-  align-content: center;
-  min-height: 12rem;
-  background:
-    linear-gradient(90deg, rgba(206, 68, 68, 0.14) 0 3.1rem, transparent 3.15rem),
-    repeating-linear-gradient(0deg, transparent 0 1.55rem, rgba(77, 103, 174, 0.1) 1.6rem),
-    var(--paper);
-}
-
-.dashboard-brief h2 {
-  margin: 0.35rem 0;
-  font-size: clamp(1.5rem, 3vw, 2.35rem);
-}
-
-.dashboard-brief p {
-  max-width: 44rem;
-  color: var(--muted);
-}
-
 .activity-panel {
   grid-column: 1 / -1;
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-18";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-19";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
@@ -514,11 +514,19 @@ function DashboardView({ course, state, helpers }) {
     { className: "dashboard-grid" },
     h(
       "div",
-      { className: "paper-panel dashboard-brief" },
-      h("span", { className: "eyebrow" }, "Academic command center"),
-      h("h2", null, "All courses at a glance."),
-      h("p", null, "Grades, risks, deadlines, missing work, and feedback are balanced across the whole term desk.")
+      { className: "grade-shelf" },
+      courseSummaries.map(({ course: item, assignments: courseAssignments, status }) =>
+        h(
+          "button",
+          { key: item.id, className: "grade-tile", style: { "--accent": item.color }, onClick: () => helpers.openCourse(item.id) },
+          h("span", null, item.name),
+          h("strong", null, `${item.grade.toFixed(1)}%`),
+          h("div", { className: "mini-grade-bar", "aria-label": `${item.name} grade ${item.grade.toFixed(1)} percent` }, h("i", { style: { width: `${Math.max(0, Math.min(100, item.grade))}%` } })),
+          h("small", null, `${status} - ${completionRatio(item, helpers)}% work complete - ${courseAssignments.length} items`)
+        )
+      )
     ),
+    h("div", { className: "course-rack dashboard-folders" }, courses.map((item) => h(CourseFolder, { key: item.id, course: item, state, helpers }))),
     h(
       "div",
       { className: "paper-panel risk-board" },
@@ -533,20 +541,6 @@ function DashboardView({ course, state, helpers }) {
             )
           )
         : h("p", { className: "empty" }, "No urgent risk signals right now.")
-    ),
-    h(
-      "div",
-      { className: "grade-shelf" },
-      courseSummaries.map(({ course: item, assignments: courseAssignments, status }) =>
-        h(
-          "button",
-          { key: item.id, className: "grade-tile", style: { "--accent": item.color }, onClick: () => helpers.openCourse(item.id) },
-          h("span", null, item.name),
-          h("strong", null, `${item.grade.toFixed(1)}%`),
-          h("div", { className: "mini-grade-bar", "aria-label": `${item.name} grade ${item.grade.toFixed(1)} percent` }, h("i", { style: { width: `${Math.max(0, Math.min(100, item.grade))}%` } })),
-          h("small", null, `${status} - ${completionRatio(item, helpers)}% work complete - ${courseAssignments.length} items`)
-        )
-      )
     ),
     h(
       "div",
@@ -575,7 +569,6 @@ function DashboardView({ course, state, helpers }) {
         )
       )
     ),
-    h("div", { className: "course-rack dashboard-folders" }, courses.map((item) => h(CourseFolder, { key: item.id, course: item, state, helpers }))),
     h(
       "div",
       { className: "paper-panel activity-panel" },
