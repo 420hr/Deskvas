@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { courses, messages, navItems } from "./data.js?v=canvas-pass-20";
+import { courses, messages, navItems } from "./data.js?v=canvas-pass-21";
 
 const storageKey = "deskcanvas-react-state-v1";
 const today = new Date("2026-06-02T12:00:00");
@@ -512,54 +512,62 @@ function DashboardView({ course, state, helpers }) {
   return h(
     "section",
     { className: "dashboard-grid" },
-    h("div", { className: "course-rack dashboard-folders" }, courses.map((item) => h(CourseFolder, { key: item.id, course: item, state, helpers }))),
     h(
       "div",
-      { className: "paper-panel risk-board" },
-      h("div", { className: "panel-head" }, h("h2", null, "Risk Summary"), h("span", null, `${riskCourses.length} signals`)),
-      riskCourses.length
-        ? riskCourses.slice(0, 4).map(({ course: item, missing: courseMissing, urgent, status }) =>
-            h(
-              "button",
-              { key: item.id, className: "risk-slip", style: { "--accent": item.color }, onClick: () => helpers.openCourse(item.id) },
-              h("strong", null, item.name),
-              h("span", null, `${status} - ${courseMissing.length} missing - ${urgent} urgent`)
-            )
-          )
-        : h("p", { className: "empty" }, "No urgent risk signals right now.")
-    ),
-    h(
-      "div",
-      { className: "paper-panel weekly-planner" },
-      h("div", { className: "panel-head" }, h("h2", null, "Today / Next 7 Days"), h("span", null, `${todayItems.length + weekItems.length} tasks`)),
-      h("div", { className: "planner-section" }, h("h3", null, "Today"), todayItems.length ? todayItems.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })) : h("p", { className: "empty" }, "Nothing due today.")),
-      h("div", { className: "planner-section" }, h("h3", null, "Next 7 Days"), weekItems.length ? weekItems.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })) : h("p", { className: "empty" }, "No upcoming due dates this week."))
-    ),
-    h(
-      "div",
-      { className: "paper-panel warning missing-tray" },
-      h("div", { className: "panel-head" }, h("h2", null, "Missing Work Tray"), h("span", null, `${missing.length} items`)),
-      missing.length ? missing.slice(0, 5).map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })) : h("p", { className: "empty" }, "No missing work. The desk is calm.")
-    ),
-    h(
-      "div",
-      { className: "paper-panel target-board" },
-      h("div", { className: "panel-head" }, h("h2", null, "Target Snapshot"), h("span", null, "All courses")),
-      courseSummaries.map(({ course: item, status }) =>
-        h(
-          "button",
-          { key: item.id, className: "target-row", style: { "--accent": item.color }, onClick: () => helpers.openGrades(item.id) },
-          h("span", null, item.name),
-          h("strong", null, `${item.grade.toFixed(1)} / ${state.targets[item.id]}%`),
-          h("em", null, status)
-        )
+      { className: "dashboard-stack dashboard-main-stack" },
+      h("div", { className: "course-rack dashboard-folders" }, courses.map((item) => h(CourseFolder, { key: item.id, course: item, state, helpers }))),
+      h(
+        "div",
+        { className: "paper-panel weekly-planner" },
+        h("div", { className: "panel-head" }, h("h2", null, "Today / Next 7 Days"), h("span", null, `${todayItems.length + weekItems.length} tasks`)),
+        h("div", { className: "planner-section" }, h("h3", null, "Today"), todayItems.length ? todayItems.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })) : h("p", { className: "empty" }, "Nothing due today.")),
+        h("div", { className: "planner-section" }, h("h3", null, "Next 7 Days"), weekItems.length ? weekItems.map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })) : h("p", { className: "empty" }, "No upcoming due dates this week."))
+      ),
+      h(
+        "div",
+        { className: "paper-panel activity-panel" },
+        h("div", { className: "panel-head" }, h("h2", null, "Recent Feedback & Activity"), h("span", null, "All courses")),
+        activity.map((event) => h(ActivityItem, { key: event.id, event }))
       )
     ),
     h(
       "div",
-      { className: "paper-panel activity-panel" },
-      h("div", { className: "panel-head" }, h("h2", null, "Recent Feedback & Activity"), h("span", null, "All courses")),
-      activity.map((event) => h(ActivityItem, { key: event.id, event }))
+      { className: "dashboard-stack dashboard-side-stack" },
+      h(
+        "div",
+        { className: "paper-panel risk-board" },
+        h("div", { className: "panel-head" }, h("h2", null, "Risk Summary"), h("span", null, `${riskCourses.length} signals`)),
+        riskCourses.length
+          ? riskCourses.slice(0, 4).map(({ course: item, missing: courseMissing, urgent, status }) =>
+              h(
+                "button",
+                { key: item.id, className: "risk-slip", style: { "--accent": item.color }, onClick: () => helpers.openCourse(item.id) },
+                h("strong", null, item.name),
+                h("span", null, `${status} - ${courseMissing.length} missing - ${urgent} urgent`)
+              )
+            )
+          : h("p", { className: "empty" }, "No urgent risk signals right now.")
+      ),
+      h(
+        "div",
+        { className: "paper-panel target-board" },
+        h("div", { className: "panel-head" }, h("h2", null, "Target Snapshot"), h("span", null, "All courses")),
+        courseSummaries.map(({ course: item, status }) =>
+          h(
+            "button",
+            { key: item.id, className: "target-row", style: { "--accent": item.color }, onClick: () => helpers.openGrades(item.id) },
+            h("span", null, item.name),
+            h("strong", null, `${item.grade.toFixed(1)} / ${state.targets[item.id]}%`),
+            h("em", null, status)
+          )
+        )
+      ),
+      h(
+        "div",
+        { className: "paper-panel warning missing-tray" },
+        h("div", { className: "panel-head" }, h("h2", null, "Missing Work Tray"), h("span", null, `${missing.length} items`)),
+        missing.length ? missing.slice(0, 5).map((assignment) => h(AssignmentSlip, { key: assignment.id, assignment, helpers })) : h("p", { className: "empty" }, "No missing work. The desk is calm.")
+      )
     )
   );
 }

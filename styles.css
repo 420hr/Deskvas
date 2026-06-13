@@ -365,12 +365,15 @@ h1 {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
+  grid-template-columns: minmax(0, 2.05fr) minmax(17rem, 1fr);
   gap: 1rem;
+  align-items: start;
 }
 
-.activity-panel {
-  grid-column: 1 / -1;
+.dashboard-stack {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
 }
 
 .risk-slip,
@@ -640,6 +643,10 @@ h1 {
 
 .course-rack {
   grid-column: 1 / -1;
+}
+
+.course-rack.dashboard-folders {
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
 }
 
 .folder {
@@ -2006,6 +2013,15 @@ input[type="range"] {
   .profile-page,
   .course-workspace {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-folders,
+  .risk-board,
+  .weekly-planner,
+  .missing-tray,
+  .target-board,
+  .activity-panel {
+    grid-column: 1 / -1;
   }
 
   .course-nav {
